@@ -1,0 +1,3349 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ESSY SELLS — All You Can Ever Need</title>
+  <meta name="description" content="ESSY SELLS: all you can ever need — beauty, accessories and more at unbeatable prices. Fast delivery, quality guaranteed." />
+  <!-- Inline favicon (orange lightning bolt) to avoid a 404 for /favicon.ico -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%277%27 fill=%27%23f97316%27/%3E%3Cpath d=%27M17.5 5L9 18h6l-1.5 9L22 14h-6l1.5-9z%27 fill=%27white%27/%3E%3C/svg%3E" />
+
+  <!-- ================= GOOGLE FONTS (Inter) ================= -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- ================= FONTAWESOME (icons) ================= -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+  <!-- ================= TAILWIND CSS (via CDN) ================= -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- ================= MOTION (motion.dev — vanilla Framer Motion) ================= -->
+  <!-- Exposes window.Motion: animate, inView, hover, press, stagger,   -->
+  <!-- prefersReducedMotion. No build step needed.                      -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@12/dist/motion.js"></script>
+
+  <!-- ================= THREE.JS (importmap) ============================ -->
+  <!-- No longer used: the intro now scrubs a pre-rendered WebP frame      -->
+  <!-- sequence on a 2D canvas. Kept as a harmless stub in case a future   -->
+  <!-- section wants WebGL; nothing imports it today.                      -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <!-- ================= CUSTOM STYLES ================= -->
+  <style>
+    /* Smooth scrolling with an offset so the sticky header never covers section titles */
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 4rem; /* matches the sticky header height (80px) */
+    }
+
+    /* Toast notification (appears briefly when an item is added) */
+    #toast {
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    /* ==========================================================
+       ADMIN TOAST
+       The dashboard has its own toast because the storefront toast
+       is hidden while admin mode is active (rule below).
+       ========================================================== */
+    #admin-toast {
+      opacity: 0;
+      transform: translate(-50%, 12px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+    #admin-toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    /* ==========================================================
+       ADMIN MODE
+       Adding .admin-mode to <body> hides the public storefront and
+       reveals #admin-dashboard. Toggled by the JS login/logout.
+       ========================================================== */
+    #admin-dashboard { display: none; }
+    body.admin-mode #admin-dashboard { display: block; }
+
+    body.admin-mode header#nav,
+    body.admin-mode main,
+    body.admin-mode footer#footer,
+    body.admin-mode #cart-overlay,
+    body.admin-mode #cart-sidebar,
+    body.admin-mode #checkout-sidebar,
+    body.admin-mode #toast {
+      display: none;
+    }
+
+    /* ==========================================================
+       SPLASH SCREEN
+       Full-screen brand loading overlay. Fades out via JS 2.5s
+       after page load, or immediately via the Skip button.
+       ========================================================== */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      background: linear-gradient(155deg, #fdf2f8 0%, #fce7f3 35%, #ede9fe 70%, #e0f2fe 100%);
+      transition: opacity 0.7s ease;
+    }
+    #splash-screen.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .splash-logo {
+      width: min(340px, 72vw);
+      max-height: 58vh;
+      object-fit: contain;
+      border-radius: 1.25rem;
+      box-shadow: 0 24px 70px -20px rgba(190, 24, 93, 0.4);
+      animation: splash-pop 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    /* Entrance: scale up slightly while fading in */
+    @keyframes splash-pop {
+      0%   { opacity: 0; transform: scale(0.82); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    /* Elegant Skip button, top-right corner */
+    #splash-skip {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      z-index: 1;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9d5c86;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(157, 92, 134, 0.35);
+      border-radius: 9999px;
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+    }
+    #splash-skip:hover {
+      background: rgba(255, 255, 255, 0.95);
+      color: #7c3aed;
+      transform: translateY(-1px);
+    }
+
+    /* Quick shake used when the wrong passcode is entered */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .shake { animation: shake 0.4s ease; }
+
+    /* Respect users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      #toast, #admin-toast { transition: none; }
+      .shake { animation: none; }
+      .splash-logo { animation: none; }
+    }
+
+    /* ==========================================================
+       UI UPGRADE — DESIGN TOKENS (ui-ux-pro-max skill)
+       Magenta brand accents blended over the existing orange
+       brand. Orange stays the primary CTA; magenta is the accent.
+       ========================================================== */
+    :root {
+      --accent-magenta: #BE185D;   /* fashion rose */
+      --accent-pink:    #EC4899;   /* vibrant pink */
+      --accent-ink:     #831843;   /* deep magenta text */
+      --accent-purple:  #8B5CF6;   /* lavender */
+      --ease-out-expo:  cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Glassmorphism (translucent surface + backdrop blur + hairline border) */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.72);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+
+    /* ==========================================================
+       MOTION-READY GATE
+       The animation script adds .motion-ready to <html> only when
+       the Motion CDN has loaded and the user does NOT prefer
+       reduced motion. That single class arms the initial hidden
+       states below — so if Motion ever fails to load, no element
+       can be stuck invisible. Reveals only animate opacity +
+       translateY (both compositor-friendly) for smooth mobile.
+       ========================================================== */
+    html.motion-ready [data-reveal],
+    html.motion-ready [data-reveal-hero],
+    html.motion-ready .product-card {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    html.motion-ready header#nav {
+      opacity: 0;
+      transform: translateY(-14px);
+    }
+
+    /* Animated magenta mesh blobs behind the hero */
+    @keyframes blob-drift-a {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33%      { transform: translate(28px, -34px) scale(1.12); }
+      66%      { transform: translate(-24px, 18px) scale(0.94); }
+    }
+    @keyframes blob-drift-b {
+      0%, 100% { transform: translate(0, 0) scale(1.05); }
+      50%      { transform: translate(-30px, 24px) scale(0.9); }
+    }
+    .hero-blob   { animation: blob-drift-a 14s ease-in-out infinite; }
+    .hero-blob-b { animation: blob-drift-b 17s ease-in-out infinite; }
+
+    /* Gentle float for the hero price badge */
+    @keyframes float-y {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    .animate-float { animation: float-y 4.5s ease-in-out infinite; }
+
+    /* Nav link: magenta underline grows from the left on hover */
+    .nav-link { position: relative; }
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 100%;
+      bottom: -4px;
+      height: 2px;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, var(--accent-magenta), var(--accent-pink));
+      transition: right 0.28s var(--ease-out-expo);
+    }
+    .nav-link:hover::after { right: 0; }
+    .nav-link:hover { color: var(--accent-magenta) !important; }
+
+    /* Decorative loops respect reduced motion (reveals are gated by
+       .motion-ready and therefore already safe) */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-blob, .hero-blob-b, .animate-float { animation: none; }
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 font-sans text-gray-600 antialiased overflow-x-hidden">
+
+  <!-- ============================================================ -->
+  <!-- ============ SPLASH SCREEN (brand loading overlay) ========= -->
+  <!-- Full-screen logo overlay. Auto-fades out 2.5s after page      -->
+  <!-- load, or is dismissed immediately via the Skip button.        -->
+  <!-- ============================================================ -->
+  <div id="splash-screen">
+    <img id="splash-logo" class="splash-logo" src="./logo.jpg" alt="Essy Sells Logo" />
+    <button type="button" id="splash-skip" aria-label="Skip splash screen">Skip</button>
+  </div>
+
+  <!-- Splash logic: auto-fade after 2.5s + Skip button -->
+  <script>
+    (function () {
+      'use strict';
+
+      var splash = document.getElementById('splash-screen');
+      var splashLogo = document.getElementById('splash-logo');
+      var dismissed = false;
+
+      // If logo.jpg is ever missing, fall back to a styled text wordmark
+      // so the splash never shows a broken image.
+      if (splashLogo) {
+        splashLogo.addEventListener('error', function () {
+          splashLogo.style.display = 'none';
+          var wordmark = document.createElement('h1');
+          wordmark.textContent = 'ESSY SELLS';
+          wordmark.style.cssText =
+            'font-weight:800;font-size:2.6rem;letter-spacing:0.06em;' +
+            'color:#9333ea;text-shadow:0 4px 18px rgba(147,51,234,0.25);';
+          splash.insertBefore(wordmark, splashLogo.nextSibling);
+        });
+      }
+
+      // Fade out and remove the overlay from the layout entirely
+      function dismissSplash() {
+        if (dismissed) return;
+        dismissed = true;
+        splash.classList.add('hide');            // smooth CSS fade-out
+        setTimeout(function () {
+          splash.style.display = 'none';         // remove from layout
+        }, 700);                                  // matches the CSS fade (0.7s)
+      }
+
+      // Skip button — enter the store immediately
+      document.getElementById('splash-skip').addEventListener('click', dismissSplash);
+
+      // Auto-dismiss 2.5 seconds after the page has fully loaded
+      if (document.readyState === 'complete') {
+        setTimeout(dismissSplash, 2500);
+      } else {
+        window.addEventListener('load', function () {
+          setTimeout(dismissSplash, 2500);
+        });
+      }
+
+      // Safety cap: never let the splash linger past 4 seconds total, even
+      // if slow resources (e.g. the hero image) delay the window 'load' event.
+      setTimeout(dismissSplash, 4000);
+    })();
+  </script>
+
+  <!-- ============================================================ -->
+  <!-- ============ FRAME-SCRUB INTRO SHOWCASE (first visit) ====== -->
+  <!-- Apple-style scroll-linked perfume explosion. A preloaded      -->
+  <!-- WebP frame sequence is scrubbed on a high-DPI canvas while    -->
+  <!-- the user scrolls a 400vh runway; Motion (motion.dev) drives   -->
+  <!-- the text overlays. Shown ONCE after the splash, gated by      -->
+  <!-- localStorage 'essy_intro_seen'. The storefront (cart,         -->
+  <!-- checkout, admin, toasts) beneath is completely untouched.     -->
+  <!-- ============================================================ -->
+  <section id="essy-intro" aria-label="ESSY SELLS introduction" aria-hidden="true">
+
+    <!-- Skip to Store (subtle, top-right) -->
+    <button id="essy-intro-skip" type="button" aria-label="Skip the introduction and go to the store">
+      Skip to Store <i class="fa-solid fa-arrow-right"></i>
+    </button>
+
+    <!-- Brand mark (top-left) -->
+    <div class="essy-intro-brand" aria-hidden="true">
+      <img src="./logo.jpg" alt="" />
+      <span>ESSY SELLS</span>
+    </div>
+
+    <!-- Scrollable body: a 400vh spacer makes scroll progress map 0–100% -->
+    <div id="essy-intro-scroll" tabindex="0" class="essy-intro-loading">
+      <div id="essy-intro-tall">
+      <!-- Sticky viewport: frame canvas + overlays + CTA -->
+      <div id="essy-intro-stage">
+        <!-- Ambient scene: micro camera breathing (outer wrapper) + gentle
+             product float (inner wrapper) around the frame canvas. Pure CSS
+             transforms, gated to the open state, disabled for reduced motion.
+             Bloom / reflection / light sweep sit inside so the whole scene
+             breathes together. -->
+        <div id="essy-intro-ambient" aria-hidden="true">
+          <div id="essy-intro-ambient-inner">
+            <!-- Frame-sequence canvas (high-DPI, object-fit contain) -->
+            <canvas id="essy-intro-canvas" aria-hidden="true"></canvas>
+
+            <!-- Bloom pulse — warm radial glow "behind" the bottle
+                 (screen-blended over the studio background) -->
+            <div id="essy-intro-bloom" aria-hidden="true"></div>
+
+            <!-- Soft blurred reflection shimmering under the bottle -->
+            <div id="essy-intro-reflection" aria-hidden="true"></div>
+
+            <!-- Luxury light sweep — slow diagonal champagne highlight -->
+            <div id="essy-intro-sweep" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <!-- Ambient FX canvas — golden dust / perfume mist / fragrance
+             molecules. Full-viewport, pointer-events:none, rAF-driven. -->
+        <canvas id="ambient-fx" aria-hidden="true"></canvas>
+
+        <!-- Cinematic vignette (keeps the text legible over the glow) -->
+        <div id="essy-intro-vignette" aria-hidden="true"></div>
+
+        <!-- Luxury loading spinner — visible until every frame is cached -->
+        <div id="essy-intro-loader" role="status" aria-live="polite" aria-label="Loading experience">
+          <div class="essy-loader-ring" aria-hidden="true"></div>
+          <p class="essy-loader-label">Curating your experience</p>
+          <p class="essy-loader-pct" id="essy-loader-pct">0%</p>
+        </div>
+
+        <!-- Scroll hint — animated mouse + sliding wheel, breathing text,
+             soft bounce arrow. Communicates interactivity without words. -->
+        <div id="essy-intro-hint" aria-hidden="true">
+          <div class="essy-hint-mouse" aria-hidden="true">
+            <span class="essy-hint-wheel"></span>
+          </div>
+          <span class="essy-hint-text">Scroll to explore</span>
+          <svg class="essy-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"></path>
+          </svg>
+        </div>
+
+        <!-- Text overlays (Motion-driven, band-activated by scroll) -->
+        <div class="essy-overlay essy-overlay-1">
+          <div class="essy-overlay-inner">
+            <h2 class="essy-overlay-title essy-overlay-title-xl">ESSY SELLS PARFUM</h2>
+            <p class="essy-overlay-sub">&lsquo;All You Can Ever Need&rsquo;</p>
+          </div>
+        </div>
+
+        <div class="essy-overlay essy-overlay-2">
+          <div class="essy-overlay-inner">
+            <h3 class="essy-overlay-title">Precision Engineered Atomizer</h3>
+            <p class="essy-overlay-sub">Ultra-fine 24-hour fragrance mist</p>
+          </div>
+        </div>
+
+        <div class="essy-overlay essy-overlay-3">
+          <div class="essy-overlay-inner">
+            <h3 class="essy-overlay-title">100% French Fragrance Oils</h3>
+            <p class="essy-overlay-sub">Hand-crafted luxury formulations</p>
+          </div>
+        </div>
+
+        <!-- Glowing Start Shopping CTA (revealed at ~90% scroll) -->
+        <div id="essy-intro-cta">
+          <div class="essy-cta-inner">
+            <h2 class="essy-overlay-title essy-overlay-title-xl">Experience Ultimate Elegance</h2>
+            <div class="essy-cta-halo-wrap">
+              <span class="essy-cta-halo" aria-hidden="true"></span>
+              <button id="essy-intro-start" type="button">
+                Start Shopping <i class="fa-solid fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Progress rail (desktop) -->
+    <div id="essy-intro-rail" aria-hidden="true">
+      <span id="essy-intro-rail-fill"></span>
+    </div>
+
+    <!-- Floating assistant orb (bottom-right). Frosted glass + golden glow,
+         idle float + occasional tooltip; retires permanently past ~18%. -->
+    <div id="essy-intro-orb" aria-hidden="true">
+      <div class="essy-orb-tip" id="essy-intro-orb-tip"></div>
+      <div class="essy-orb-core" aria-hidden="true">
+        <i class="fa-solid fa-sparkles"></i>
+      </div>
+    </div>
+
+    <style>
+      /* ==========================================================
+         FRAME-SCRUB INTRO — CINEMATIC REDESIGN
+         Ambient: the frames' own warm ultra-dark border colour
+         (#2B2620 — measured from the render edges) so the .webp
+         rectangle melts into one endless studio environment.
+         Typography: Inter, tracking-tight, soft bloom text-shadow.
+         Animation: opacity + transform only (compositor-friendly).
+         ========================================================== */
+      #essy-intro {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        overflow: hidden;
+        /* Warm volumetric studio lighting behind the canvas —
+           mirrors the key light baked into the top-right of the
+           frames, with a faint magenta rim for brand depth. */
+        background:
+          radial-gradient(90% 70% at 84% -4%, rgba(212, 172, 128, 0.20), transparent 62%),
+          radial-gradient(70% 60% at 14% 100%, rgba(150, 84, 70, 0.14), transparent 58%),
+          radial-gradient(120% 100% at 50% 52%, rgba(255, 216, 172, 0.05), transparent 62%),
+          #2B2620;
+        transition: opacity 0.7s ease, visibility 0.7s ease;
+      }
+      #essy-intro.essy-intro-open {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
+      #essy-intro.essy-intro-exit {
+        opacity: 0;
+        transform: scale(1.03);
+        filter: blur(6px);
+        pointer-events: none;
+        transition: opacity 0.75s ease, transform 0.75s ease, filter 0.75s ease;
+      }
+      body.essy-intro-lock { overflow: hidden; }
+
+      #essy-intro-scroll {
+        height: 100vh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        outline: none;
+      }
+      #essy-intro-scroll::-webkit-scrollbar { display: none; }
+      /* Scrolling is locked until every frame is cached */
+      #essy-intro-scroll.essy-intro-loading { overflow: hidden; }
+      /* 400vh spacer = 3 viewports of scrollable runway */
+      #essy-intro-tall { height: 400vh; }
+
+      #essy-intro-stage {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* The frame rectangle is feathered into the infinite studio:
+         a radial mask dissolves the hard .webp edges. The opaque core
+         starts at 58% of the radial distance — beyond the whole bottle
+         (measured: its plinth base sits at ~0.56 normalized) so the
+         product is never dimmed, while the spray beyond it fades and
+         the frame edges/corners dissolve into the ambient studio.
+         -webkit- first for Safari. */
+      #essy-intro-canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        -webkit-mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, #000 58%, transparent 92%);
+        mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, #000 58%, transparent 92%);
+      }
+
+      /* Cinematic falloff: darkens the extreme edges/corners so the
+         product sits in a pool of warm studio shadow. */
+      #essy-intro-vignette {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        pointer-events: none;
+        background: radial-gradient(125% 105% at 50% 48%, transparent 52%, rgba(14, 10, 7, 0.52) 100%);
+      }
+
+      /* ===================== LOADER ===================== */
+      #essy-intro-loader {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        translate: -50% -50%;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        text-align: center;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+      }
+      #essy-intro-loader.essy-loader-done { opacity: 0; visibility: hidden; }
+      .essy-loader-ring {
+        width: 3.4rem;
+        height: 3.4rem;
+        border-radius: 9999px;
+        border: 1.5px solid rgba(255, 255, 255, 0.10);
+        border-top-color: rgba(255, 255, 255, 0.85);
+        border-right-color: rgba(255, 255, 255, 0.3);
+        animation: essy-loader-spin 1.1s linear infinite;
+      }
+      @keyframes essy-loader-spin { to { transform: rotate(360deg); } }
+      .essy-loader-label {
+        font-size: 0.6rem;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.42);
+      }
+      .essy-loader-pct {
+        font-size: 0.7rem;
+        font-weight: 400;
+        letter-spacing: 0.18em;
+        color: rgba(255, 255, 255, 0.7);
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ===================== TEXT OVERLAYS =====================
+         Strict safe-zones (max-width 380px) — the bottle is the
+         hero, typography is the supporting cast and never overlaps.
+         ========================================================== */
+      .essy-overlay {
+        position: absolute;
+        z-index: 15;
+        pointer-events: none;
+        will-change: opacity, transform;
+      }
+      .essy-overlay-inner { opacity: 0; will-change: opacity, transform; }
+      .essy-overlay-title {
+        margin: 0;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.08;
+        text-transform: uppercase;
+        text-shadow:
+          0 0 26px rgba(255, 255, 255, 0.22),
+          0 2px 44px rgba(255, 255, 255, 0.10);
+      }
+      .essy-overlay-title-xl { font-size: clamp(1.75rem, 4.4vw, 3rem); }
+      .essy-overlay h3.essy-overlay-title { font-size: clamp(1.15rem, 2.2vw, 1.6rem); }
+      .essy-overlay-sub {
+        margin: 0.7rem 0 0;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: clamp(0.8rem, 1.2vw, 0.98rem);
+        font-weight: 400;
+        letter-spacing: 0.01em;
+        line-height: 1.55;
+      }
+      /* Frame 1 — pinned bottom-centre, fades as scrolling begins */
+      .essy-overlay-1 {
+        left: 50%;
+        bottom: 12%;
+        translate: -50% 0;
+        width: min(380px, 88vw);
+        text-align: center;
+      }
+      /* Frame 2 — vertical-centre, LEFT third */
+      .essy-overlay-2 {
+        left: 10%;
+        top: 50%;
+        translate: 0 -50%;
+        width: min(380px, 78vw);
+      }
+      /* Frame 3 — vertical-centre, RIGHT third */
+      .essy-overlay-3 {
+        right: 10%;
+        top: 50%;
+        translate: 0 -50%;
+        width: min(380px, 78vw);
+      }
+
+      /* ===================== CTA ===================== */
+      #essy-intro-cta {
+        position: absolute;
+        left: 50%;
+        bottom: 10%;
+        translate: -50% 0;
+        z-index: 25;
+        text-align: center;
+        pointer-events: none;
+      }
+      #essy-intro-cta.essy-cta-live { pointer-events: auto; }
+      .essy-cta-inner { opacity: 0; will-change: opacity, transform; }
+      /* CTA — hover lift + wider soft gold shadow + glass highlight sweep.
+         The pulsing glow lives in a dedicated halo behind the button so the
+         button itself can transition box-shadow freely on hover. */
+      .essy-cta-halo-wrap {
+        position: relative;
+        display: inline-flex;
+        margin-top: 1.8rem;
+      }
+      .essy-cta-halo {
+        position: absolute;
+        inset: -14px;
+        border-radius: 9999px;
+        pointer-events: none;
+        background: radial-gradient(50% 62% at 50% 42%, rgba(255, 214, 140, 0.5), transparent 72%);
+        filter: blur(16px);
+        opacity: 0.5;
+      }
+      #essy-intro.essy-intro-open .essy-cta-halo {
+        animation: essy-cta-halo-pulse 3s ease-in-out infinite;
+      }
+      @keyframes essy-cta-halo-pulse {
+        0%, 100% { opacity: 0.38; }
+        50%      { opacity: 0.7; }
+      }
+      #essy-intro-start {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        position: relative;
+        overflow: hidden;
+        padding: 1rem 2.4rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #fff;
+        background: linear-gradient(135deg, #be185d, #ec4899);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        box-shadow: 0 4px 16px rgba(190, 24, 93, 0.28);
+        cursor: pointer;
+        transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s ease;
+      }
+      /* Glass highlight that sweeps across on hover */
+      #essy-intro-start::after {
+        content: "";
+        position: absolute;
+        top: -20%;
+        bottom: -20%;
+        left: -30%;
+        width: 45%;
+        transform: translateX(-160%) rotate(8deg);
+        background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.42), transparent);
+        transition: transform 0.6s ease;
+        pointer-events: none;
+      }
+      #essy-intro-start:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow:
+          0 14px 40px rgba(212, 175, 55, 0.35),
+          0 6px 24px rgba(190, 24, 93, 0.3),
+          0 0 0 1px rgba(255, 224, 160, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      #essy-intro-start:hover::after { transform: translateX(320%) rotate(8deg); }
+      #essy-intro-start:active { transform: scale(0.97); box-shadow: 0 4px 14px rgba(190, 24, 93, 0.3); }
+
+      /* ===================== BRAND (top-left) ===================== */
+      .essy-intro-brand {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 40px 60px;
+      }
+      .essy-intro-brand img {
+        width: 2.5rem;
+        height: 2.5rem;
+        object-fit: cover;
+        border-radius: 0.55rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      }
+      .essy-intro-brand span {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        color: rgba(255, 255, 255, 0.92);
+        text-shadow: 0 0 18px rgba(255, 255, 255, 0.18);
+      }
+
+      /* Skip — ghost, balanced top-right (padding mirrors the brand) */
+      #essy-intro-skip {
+        position: absolute;
+        top: 40px;
+        right: 60px;
+        z-index: 30;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.42);
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 9999px;
+        padding: 0.55rem 1rem;
+        cursor: pointer;
+        transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+      }
+      #essy-intro-skip:hover {
+        color: rgba(255, 255, 255, 0.92);
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      /* Scroll hint — animated mouse cue + breathing text + bounce arrow.
+         The group breathes 60–100% with a faint champagne glow, and fades in
+         stages once scrolling starts (see .essy-intro-hint-fading below). */
+      #essy-intro-hint {
+        position: absolute;
+        bottom: 4.5%;
+        left: 50%;
+        translate: -50% 0;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.7rem;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.6rem;
+        font-weight: 600;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        transition: opacity 0.6s ease, visibility 0.6s ease;
+      }
+      #essy-intro.essy-intro-open #essy-intro-hint {
+        animation: essy-hint-breathe 3s ease-in-out infinite;
+        text-shadow:
+          0 0 18px rgba(255, 214, 156, 0.35),
+          0 0 42px rgba(255, 214, 156, 0.18);
+      }
+      @keyframes essy-hint-breathe {
+        0%, 100% { opacity: 0.6; }
+        50%      { opacity: 1; }
+      }
+      #essy-intro-hint .essy-chevron {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-top: -0.25rem;
+      }
+      #essy-intro.essy-intro-open #essy-intro-hint .essy-chevron {
+        animation: essy-hint-arrow 1.8s ease-in-out infinite;
+      }
+      @keyframes essy-hint-arrow {
+        0%, 100% { transform: translateY(0); opacity: 0.75; }
+        50%      { transform: translateY(5px); opacity: 0.3; }
+      }
+      /* Staged dismissal — first scroll lowers opacity (JS adds .fading),
+         then the scrubber controller hides it completely past ~18%. */
+      #essy-intro-hint.essy-intro-hint-fading {
+        opacity: 0.35 !important;
+        animation: none !important;
+      }
+      #essy-intro-hint.essy-intro-hint-hidden { opacity: 0; visibility: hidden; }
+
+      /* ===================== PROGRESS LINE =====================
+         Ultra-minimal 1px line on the far right edge with a delicate
+         white 15px fill tracking scroll progress. */
+      #essy-intro-rail {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 20;
+        width: 1px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.14);
+        pointer-events: none;
+      }
+      #essy-intro-rail-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1px;
+        height: 15px;
+        border-radius: 2px;
+        background: #fff;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        transition: top 0.12s linear;
+      }
+
+      /* ==========================================================
+         AMBIENT MOTION SYSTEM — layered on top of the scrubber.
+         Every loop is gated to the open state, uses only compositor-
+         friendly properties (transform / opacity), and is switched
+         off for reduced motion. Intensities stay in the 2–5% range so
+         the bottle remains the hero.
+         ========================================================== */
+      #essy-intro-ambient {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        will-change: transform;
+      }
+      #essy-intro-ambient-inner {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        will-change: transform;
+      }
+      /* Micro camera breathing — scale(1) → scale(1.003), 20s, ease-in-out */
+      #essy-intro.essy-intro-open #essy-intro-ambient {
+        animation: essy-breathe 20s ease-in-out infinite;
+      }
+      /* Gentle product float — translateY(0 → -3px), 6s, alternate */
+      #essy-intro.essy-intro-open #essy-intro-ambient-inner {
+        animation: essy-float-y 6s ease-in-out infinite alternate;
+      }
+      @keyframes essy-breathe {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.003); }
+      }
+      @keyframes essy-float-y {
+        0%   { transform: translateY(0); }
+        100% { transform: translateY(-3px); }
+      }
+
+      /* Bloom pulse — warm radial backlight behind the bottle;
+         opacity breathes 0.40 → 0.60 over 10s. */
+      #essy-intro-bloom {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(88vw, 760px);
+        height: min(88vw, 760px);
+        translate: -50% -56%;
+        z-index: 2;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        background: radial-gradient(circle,
+          rgba(255, 214, 156, 0.5) 0%,
+          rgba(255, 190, 120, 0.2) 38%,
+          transparent 68%);
+        filter: blur(6px);
+      }
+      #essy-intro.essy-intro-open #essy-intro-bloom {
+        animation: essy-bloom-pulse 10s ease-in-out infinite;
+      }
+      @keyframes essy-bloom-pulse {
+        0%, 100% { opacity: 0.4; }
+        50%      { opacity: 0.6; }
+      }
+
+      /* Reflection — soft blurred champagne glow shimmering under the
+         bottle base (aligned to ~78% vh where the plinth sits). */
+      #essy-intro-reflection {
+        position: absolute;
+        left: 50%;
+        bottom: 12%;
+        width: min(46vw, 400px);
+        height: 90px;
+        z-index: 2;
+        pointer-events: none;
+        mix-blend-mode: screen;
+        background: radial-gradient(58% 52% at 50% 50%,
+          rgba(255, 216, 160, 0.32) 0%,
+          rgba(255, 216, 160, 0.1) 45%,
+          transparent 72%);
+        filter: blur(13px);
+      }
+      #essy-intro.essy-intro-open #essy-intro-reflection {
+        animation: essy-reflection-shimmer 7s ease-in-out infinite;
+      }
+      @keyframes essy-reflection-shimmer {
+        0%, 100% { opacity: 0.45; transform: translateX(-50%) scaleY(1); }
+        50%      { opacity: 0.68; transform: translateX(-50%) scaleY(1.08); }
+      }
+
+      /* Luxury light sweep — a champagne band glides diagonally across
+         the scene every ~9s, blended with soft-light. Extremely faint. */
+      #essy-intro-sweep {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 160vw;
+        height: 100%;
+        z-index: 3;
+        pointer-events: none;
+        mix-blend-mode: soft-light;
+        will-change: transform;
+        background: linear-gradient(115deg,
+          transparent 0%,
+          transparent 43%,
+          rgba(255, 242, 214, 0.10) 49%,
+          rgba(255, 214, 140, 0.15) 52%,
+          rgba(255, 242, 214, 0.10) 55%,
+          transparent 61%,
+          transparent 100%);
+      }
+      #essy-intro.essy-intro-open #essy-intro-sweep {
+        animation: essy-sweep 9s ease-in-out infinite;
+      }
+      @keyframes essy-sweep {
+        /* One-directional: sweeps across the bottle, dissolves on the
+           right, then returns invisible — no backward wash is seen. */
+        0%, 10%  { transform: translateX(-96vw); opacity: 0; }
+        16%      { opacity: 1; }
+        45%, 55% { transform: translateX(-18vw); opacity: 1; }
+        62%      { opacity: 0; }
+        100%     { transform: translateX(-96vw); opacity: 0; }
+      }
+
+      /* Ambient FX canvas — golden dust / mist / molecules */
+      #ambient-fx {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+
+      /* ==========================================================
+         SCROLL DISCOVERY — animated mouse cue
+         Wheel slides every 2.4s, arrow bounces, the whole group
+         breathes 60–100% with a faint champagne glow, then fades
+         gradually once scrolling starts (gone by ~18%).
+         ========================================================== */
+      .essy-hint-mouse {
+        position: relative;
+        width: 26px;
+        height: 42px;
+        border: 1.5px solid rgba(255, 255, 255, 0.55);
+        border-radius: 14px;
+        box-shadow:
+          0 0 16px rgba(255, 214, 156, 0.28),
+          inset 0 0 10px rgba(255, 214, 156, 0.10);
+      }
+      .essy-hint-wheel {
+        position: absolute;
+        left: 50%;
+        top: 8px;
+        width: 4px;
+        height: 10px;
+        margin-left: -2px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 0 8px rgba(255, 220, 160, 0.8);
+      }
+      #essy-intro.essy-intro-open .essy-hint-wheel {
+        animation: essy-mouse-wheel 2.4s ease-in-out infinite;
+      }
+      @keyframes essy-mouse-wheel {
+        0%        { transform: translateY(0); opacity: 1; }
+        55%       { transform: translateY(14px); opacity: 0; }
+        60%, 100% { transform: translateY(0); opacity: 0; }
+      }
+      .essy-hint-text { white-space: nowrap; }
+
+      /* ==========================================================
+         FLOATING ASSISTANT ORB — bottom-right luxury helper.
+         Frosted glass circle with a golden glow, floating + breathing
+         idle motion, occasional tooltip. Retires after ~18% scroll.
+         ========================================================== */
+      #essy-intro-orb {
+        position: absolute;
+        right: 1.75rem;
+        bottom: 1.75rem;
+        z-index: 35;
+        width: 48px;
+        height: 48px;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.8s ease, visibility 0.8s ease;
+      }
+      #essy-intro.essy-intro-open #essy-intro-orb.essy-intro-orb-live {
+        opacity: 1;
+        visibility: visible;
+        animation: essy-orb-float 5.5s ease-in-out infinite alternate;
+      }
+      #essy-intro.essy-intro-open #essy-intro-orb.essy-intro-orb-gone {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.9s ease, visibility 0.9s ease;
+      }
+      .essy-orb-core {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 224, 166, 0.95);
+        font-size: 1.05rem;
+        background: rgba(255, 255, 255, 0.07);
+        -webkit-backdrop-filter: blur(12px) saturate(150%);
+        backdrop-filter: blur(12px) saturate(150%);
+        border: 1px solid rgba(255, 220, 160, 0.35);
+        box-shadow:
+          0 0 22px rgba(255, 204, 128, 0.35),
+          0 0 60px rgba(255, 190, 110, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      }
+      #essy-intro.essy-intro-open #essy-intro-orb.essy-intro-orb-live .essy-orb-core {
+        animation:
+          essy-orb-breathe 4s ease-in-out infinite,
+          essy-orb-spin 7s ease-in-out infinite;
+      }
+      @keyframes essy-orb-float {
+        0%   { transform: translateY(0); }
+        100% { transform: translateY(-6px); }
+      }
+      @keyframes essy-orb-breathe {
+        0%, 100% { box-shadow: 0 0 18px rgba(255, 204, 128, 0.3), 0 0 48px rgba(255, 190, 110, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+        50%      { box-shadow: 0 0 30px rgba(255, 204, 128, 0.5), 0 0 80px rgba(255, 190, 110, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22); }
+      }
+      @keyframes essy-orb-spin {
+        0%, 85%, 100% { transform: rotate(0deg); }
+        92%           { transform: rotate(8deg); }
+        98%           { transform: rotate(-4deg); }
+      }
+      .essy-orb-tip {
+        position: absolute;
+        right: calc(100% + 14px);
+        top: 50%;
+        translate: 0 -50%;
+        max-width: 200px;
+        padding: 0.55rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.64rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255, 238, 210, 0.95);
+        white-space: normal;
+        background: rgba(43, 38, 32, 0.55);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 220, 160, 0.22);
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.35), 0 0 20px rgba(255, 200, 120, 0.12);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.45s ease, visibility 0.45s ease;
+      }
+      .essy-orb-tip::after {
+        content: "";
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        translate: 0 -50%;
+        border: 5px solid transparent;
+        border-left-color: rgba(43, 38, 32, 0.55);
+      }
+      .essy-orb-tip.essy-orb-tip-show {
+        opacity: 1;
+        visibility: visible;
+      }
+      @media (max-width: 767px) {
+        #essy-intro-orb { right: 1rem; bottom: 1.15rem; width: 44px; height: 44px; }
+        .essy-orb-tip { right: calc(100% + 10px); max-width: 150px; font-size: 0.58rem; }
+      }
+
+      /* Responsive: mobile portrait (frame fills the width, so text
+         moves to the lower third to stay clear of the bottle) */
+      @media (max-width: 767px) {
+        .essy-intro-brand { padding: 24px 28px; }
+        .essy-intro-brand img { width: 2.1rem; height: 2.1rem; }
+        .essy-intro-brand span { letter-spacing: 0.14em; }
+        #essy-intro-skip { top: 24px; right: 20px; }
+        .essy-overlay-1 { bottom: 19%; }
+        .essy-overlay-2, .essy-overlay-3 {
+          left: 50% !important;
+          right: auto !important;
+          top: auto;
+          bottom: 15%;
+          translate: -50% 0;
+          width: min(340px, 86vw);
+        }
+        #essy-intro-cta { bottom: 8%; }
+        #essy-intro-hint { bottom: 5%; }
+      }
+
+      /* Reduced motion: keep content, kill decorative loops */
+      @media (prefers-reduced-motion: reduce) {
+        #essy-intro-start,
+        .essy-loader-ring { animation: none; }
+        /* Ambient loops off (FX canvas is skipped in JS too) */
+        #essy-intro.essy-intro-open #essy-intro-ambient,
+        #essy-intro.essy-intro-open #essy-intro-ambient-inner,
+        #essy-intro.essy-intro-open #essy-intro-bloom,
+        #essy-intro.essy-intro-open #essy-intro-reflection,
+        #essy-intro.essy-intro-open #essy-intro-sweep,
+        #essy-intro.essy-intro-open #essy-intro-hint,
+        #essy-intro.essy-intro-open #essy-intro-orb.essy-intro-orb-live,
+        #essy-intro.essy-intro-open #essy-intro-orb.essy-intro-orb-live .essy-orb-core,
+        #essy-intro.essy-intro-open .essy-cta-halo,
+        .essy-hint-wheel,
+        #essy-intro-hint .essy-chevron {
+          animation: none !important;
+        }
+        #essy-intro-hint { text-shadow: none; }
+        #essy-intro-hint.essy-intro-hint-fading { opacity: 1 !important; }
+      }
+
+    </style>
+  </section>
+
+
+  <!-- ============================================================ -->
+  <!-- ============ FRAME-SCRUB INTRO CONTROLLER ================== -->
+  <!-- First-visit gate, frame preloading + luxury loader, high-DPI -->
+  <!-- canvas scrubbing with cross-dissolve, Motion text bands, and -->
+  <!-- skip/start transitions. Cart, checkout, admin untouched.    -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ------------------------------------------------------------
+         1. CONFIG
+         public/frames/ezgif-268d7c501a374f38_XXX.webp (000..101).
+         Frames are 720x1280 (9:16) WebP.
+         ------------------------------------------------------------ */
+      var FRAME_BASE = 'public/frames/ezgif-268d7c501a374f38_';
+      var FRAME_COUNT = 102;   // 000..101 — bump if you add frames
+      /* Warm ultra-dark ambient measured from the frames' border ring
+         (#2B2620 ≈ rgb 43,38,32) so the canvas melts into the studio. */
+      var AMBIENT = '#2B2620';
+      /* The perfume bottle occupies ~50% of the 720x1280 frame height
+         (measured via pixel scan: rows 28%..78%). Drawing the frame
+         contain-fit therefore lands the bottle at ~50% of the viewport
+         height on desktop — exactly the 45-55% requirement. */
+      var BOTTLE_H_FRAME = 640;   // 0.5 * 1280 — measured bottle height
+      var BOTTLE_VH = 0.5;        // target share of viewport height
+
+      var KEY = 'essy_intro_seen';
+
+      var intro     = document.getElementById('essy-intro');
+      var scroller  = document.getElementById('essy-intro-scroll');
+      var skipBtn   = document.getElementById('essy-intro-skip');
+      var startBtn  = document.getElementById('essy-intro-start');
+      var cta       = document.getElementById('essy-intro-cta');
+      var ctaInner  = cta ? cta.querySelector('.essy-cta-inner') : null;
+      var hint      = document.getElementById('essy-intro-hint');
+      var railFill  = document.getElementById('essy-intro-rail-fill');
+      var loader    = document.getElementById('essy-intro-loader');
+      var loaderPct = document.getElementById('essy-loader-pct');
+      var canvas    = document.getElementById('essy-intro-canvas');
+      var ctx       = canvas ? canvas.getContext('2d') : null;
+
+      var M = window.Motion;
+      var EASE = [0.22, 1, 0.36, 1];
+      var reduced = window.matchMedia &&
+                    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      var frames = [];                 // Image() cache (null = failed)
+      var loadedCount = 0;
+      var ready = false;
+      var showing = false;
+      var finished = false;
+
+      var progress = 0;                // 0..1, updated by scroll
+      var lastFloor = -1, lastFrac = -1;
+      var cssW = 0, cssH = 0;
+      var rafId = 0;
+      var needsResize = true;
+      var needsDraw = false;           // repaint requested (scroll/resize)
+
+      window.EssyIntro = {
+        isShowing: function () { return showing; },
+        isReady: function () { return ready; },
+        framesLoaded: function () { return loadedCount; },
+        getProgress: function () { return progress; }
+      };
+
+      function markSeen() { try { localStorage.setItem(KEY, '1'); } catch (e) {} }
+      function hasSeen() { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+
+      /* ------------------------------------------------------------
+         2. FRAME PRELOAD + LUXURY LOADER
+         Scroll is locked (CSS .essy-intro-loading) until every frame
+         has been fetched and cached in the Image() array.
+         ------------------------------------------------------------ */
+      function preload() {
+        for (var i = 0; i < FRAME_COUNT; i++) {
+          (function (i) {
+            var img = new Image();
+            img.onload = function () { frames[i] = img; onOne(); };
+            img.onerror = function () { frames[i] = null; onOne(); };
+            img.src = FRAME_BASE + String(i).padStart(3, '0') + '.webp';
+          })(i);
+        }
+      }
+
+      function onOne() {
+        loadedCount++;
+        if (loaderPct) loaderPct.textContent = Math.round((loadedCount / FRAME_COUNT) * 100) + '%';
+        if (loadedCount >= FRAME_COUNT) onFramesReady();
+      }
+
+      function onFramesReady() {
+        ready = true;
+        if (loader) loader.classList.add('essy-loader-done');
+        if (scroller) scroller.classList.remove('essy-intro-loading');   // unlock scrolling
+        resizeCanvas();
+        draw();                                                          // first frame
+      }
+
+      /* ------------------------------------------------------------
+         3. HIGH-DPI CANVAS
+         Backing store = CSS size x devicePixelRatio (capped at 2: the
+         720px source is a near 1:1 fit at dpr 2 on a Retina phone,
+         so more pixels would only cost memory, not sharpness).
+         ctx.setTransform(dpr, ...) is the ctx.scale() requirement.
+         ------------------------------------------------------------ */
+      function resizeCanvas() {
+        var stage = document.getElementById('essy-intro-stage');
+        var w = (stage ? stage.clientWidth : window.innerWidth) || 1;
+        var h = (stage ? stage.clientHeight : window.innerHeight) || 1;
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        cssW = w; cssH = h;
+        needsResize = false;
+        lastFloor = -1; lastFrac = -1;
+      }
+
+      /* object-fit: contain — centre the 9:16 frame, never stretch.
+         Bottle scale: (BOTTLE_VH * cssH) / BOTTLE_H_FRAME drives the
+         product to 50% of the viewport height; for these frames it
+         equals contain-by-height (bottle ≈ 50% of the frame), and it
+         stays the primary constraint if frames with a different
+         bottle ratio are ever swapped in. The contain terms bound it
+         so nothing ever gets cropped on extreme aspect ratios. */
+      function drawFrame(img, alpha) {
+        var fw = img.naturalWidth || 720, fh = img.naturalHeight || 1280;
+        var bottleScale = (BOTTLE_VH * cssH) / BOTTLE_H_FRAME;
+        var scale = Math.min(cssW / fw, cssH / fh, bottleScale);
+        var dw = fw * scale, dh = fh * scale;
+        var dx = (cssW - dw) / 2, dy = (cssH - dh) / 2;
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(img, dx, dy, dw, dh);
+      }
+
+      /* Cross-dissolve between the floor/ceil frames for buttery
+         scrubbing (Apple-style), repainting only on change. */
+      function draw() {
+        if (!ready || !ctx || finished) return;
+        if (needsResize) resizeCanvas();
+        var pos = progress * (FRAME_COUNT - 1);
+        var floor = Math.min(FRAME_COUNT - 1, Math.max(0, Math.floor(pos)));
+        var frac = pos - floor;
+        if (floor === lastFloor && Math.abs(frac - lastFrac) < 0.001) return;
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = AMBIENT;
+        ctx.fillRect(0, 0, cssW, cssH);
+        if (frames[floor]) drawFrame(frames[floor], 1);
+        if (frac > 0 && frames[floor + 1]) drawFrame(frames[floor + 1], frac);
+
+        lastFloor = floor; lastFrac = frac;
+      }
+
+      /* Repaint pump: only runs while a repaint is pending, so an
+         idle intro burns no frames. Scroll/resize set needsDraw and
+         wake the pump via requestDraw(). */
+      function pump() {
+        if (finished || !showing || rafId) return;
+        rafId = requestAnimationFrame(function () {
+          rafId = 0;
+          if (!finished && showing && needsDraw) {
+            needsDraw = false;
+            draw();
+          }
+          if (needsDraw && !finished && showing) pump();
+        });
+      }
+
+      function requestDraw() { needsDraw = true; pump(); }
+
+      /* ------------------------------------------------------------
+         4. SCROLL PROGRESS -> FRAMES + MOTION TEXT BANDS
+         0-20%   ESSY SELLS PARFUM (centred cinematic title)
+         30-50%  Precision Engineered Atomizer (left, mid-screen)
+         60-80%  100% French Fragrance Oils (right, mid-screen)
+         90-100% Experience Ultimate Elegance + Start Shopping
+         ------------------------------------------------------------ */
+      var OVERLAYS = [
+        { wrap: document.querySelector('.essy-overlay-1'), el: document.querySelector('.essy-overlay-1 .essy-overlay-inner'), start: 0.00, end: 0.15, fadeIn: 0.00, fadeOut: 0.15, rise: 30 },
+        { wrap: document.querySelector('.essy-overlay-2'), el: document.querySelector('.essy-overlay-2 .essy-overlay-inner'), start: 0.30, end: 0.50, fadeIn: 0.05, fadeOut: 0.05, rise: 30 },
+        { wrap: document.querySelector('.essy-overlay-3'), el: document.querySelector('.essy-overlay-3 .essy-overlay-inner'), start: 0.60, end: 0.80, fadeIn: 0.05, fadeOut: 0.05, rise: 30 },
+        { wrap: cta, el: ctaInner, start: 0.90, end: 1.00, fadeIn: 0.05, fadeOut: 0.00, rise: 24, isCta: true }
+      ];
+
+      /* Band opacity with a real plateau in the middle. The title band
+         is fully visible from p=0 (no fade-in), and the final CTA band
+         has NO fade-out so the button stays fully clickable at 100%. */
+      function bandOpacity(o, p) {
+        if (p < o.start || p > o.end) return 0;
+        var t = 1;
+        if (o.fadeIn > 0 && p < o.start + o.fadeIn) t = (p - o.start) / o.fadeIn;
+        if (o.fadeOut > 0 && p > o.end - o.fadeOut) t = Math.min(t, Math.max(0, (o.end - p) / o.fadeOut));
+        return Math.max(0, Math.min(1, t));
+      }
+
+      function animateOverlay(o, target) {
+        if (!o.el) return;
+        if (reduced) {
+          o.el.style.opacity = target > 0.5 ? '1' : '0';
+          o.el.style.transform = 'translateY(0)';
+          return;
+        }
+        var y = (1 - target) * o.rise;
+        if (M && M.animate) {
+          // Motion (motion.dev) tween — same pattern as the storefront reveals
+          M.animate(o.el, { opacity: target, y: y }, { duration: 0.45, easing: EASE });
+        } else {
+          o.el.style.opacity = target;
+          o.el.style.transform = 'translateY(' + y + 'px)';
+        }
+      }
+
+      function applyProgress(p) {
+        p = Math.max(0, Math.min(1, p));
+        progress = p;
+        requestDraw();
+
+        // Text overlays
+        OVERLAYS.forEach(function (o) {
+          var t = bandOpacity(o, p);
+          if (o.isCta && o.wrap) o.wrap.classList.toggle('essy-cta-live', t > 0.5);
+          if (o.wrap) o.wrap.setAttribute('aria-hidden', t <= 0.5 ? 'true' : 'false');
+          if (Math.abs(t - (o._last || 0)) > 0.001) {
+            o._last = t;
+            animateOverlay(o, t);
+          }
+        });
+
+        // Scroll hint fades away as the user understands the interaction
+        if (hint) hint.classList.toggle('essy-intro-hint-hidden', p > 0.18);
+
+        // Progress line: 15px white fill travelling down the 1px track
+        if (railFill) railFill.style.top = ((window.innerHeight - 15) * p) + 'px';
+      }
+
+      function onScroll() {
+        var max = scroller.scrollHeight - scroller.clientHeight;
+        applyProgress(max > 0 ? scroller.scrollTop / max : 0);
+      }
+
+      function bindScroll() {
+        scroller.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      }
+
+      /* ------------------------------------------------------------
+         5. FINISH / SKIP / START
+         Fades the whole overlay out, then display:none + unlocks the
+         storefront beneath. 'essy:intro-done' lets the Motion hero
+         entrance fire (the storefront's EssyAnimations listens for it).
+         ------------------------------------------------------------ */
+      function finish() {
+        if (finished) return;
+        finished = true;
+        markSeen();
+        intro.classList.add('essy-intro-exit');
+        document.body.classList.remove('essy-intro-lock');
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+        window.removeEventListener('resize', onResize);
+        if (scroller) scroller.removeEventListener('scroll', onScroll);
+        frames.length = 0;               // release the decoded frame cache
+        window.setTimeout(function () {
+          intro.style.display = 'none';
+          intro.setAttribute('aria-hidden', 'true');
+          document.dispatchEvent(new CustomEvent('essy:intro-done'));
+        }, 780);
+      }
+
+      skipBtn.addEventListener('click', finish);
+      startBtn.addEventListener('click', finish);
+
+      // Escape key skips (accessibility)
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && showing && !finished) finish();
+      });
+
+      function onResize() {
+        needsResize = true;
+        requestDraw();
+        onScroll();   // re-track the progress line for the new viewport height
+      }
+
+      function showIntro() {
+        if (showing || finished) return;
+        showing = true;
+        document.body.classList.add('essy-intro-lock');
+        intro.setAttribute('aria-hidden', 'false');
+        void intro.offsetWidth;                 // reflow so the open transition runs
+        intro.classList.add('essy-intro-open');
+        window.addEventListener('resize', onResize);
+        bindScroll();
+        scroller.focus();                       // keyboard scrollable (a11y)
+        preload();                              // loader shows until frames cache
+        // Fail-open: never trap the user on a stuck loader
+        window.setTimeout(function () {
+          if (showing && !finished && !ready) onFramesReady();
+        }, 15000);
+      }
+
+      /* Show after the splash overlay is gone — first visit only. */
+      function maybeShow() {
+        if (showing || finished) return;
+        if (!hasSeen()) showIntro();
+      }
+
+      var splash = document.getElementById('splash-screen');
+      if (splash) {
+        var observer = new MutationObserver(maybeShow);
+        observer.observe(splash, { attributes: true, attributeFilter: ['class', 'style'] });
+        setTimeout(maybeShow, 5400);            // safety net
+      } else {
+        window.setTimeout(maybeShow, 700);
+      }
+    })();
+  </script>
+
+
+
+  <!-- ============================================================ -->
+  <!-- ============ AMBIENT MOTION + SCROLL DISCOVERY ============= -->
+  <!-- Pure additive layer over the frame scrubber. Never touches the -->
+  <!-- canvas draw loop, the overlay bands, or the finish/skip flow.  -->
+  <!-- Provides: golden-dust FX canvas with scroll inertia, the       -->
+  <!-- assistant orb tooltips, and the staged scroll-hint fade.       -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      var intro    = document.getElementById('essy-intro');
+      var scroller = document.getElementById('essy-intro-scroll');
+      var hint     = document.getElementById('essy-intro-hint');
+      var orb      = document.getElementById('essy-intro-orb');
+      var orbTip   = document.getElementById('essy-intro-orb-tip');
+
+      var reduced = window.matchMedia &&
+                    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      function getProgress() {
+        if (window.EssyIntro && typeof window.EssyIntro.getProgress === 'function') {
+          return window.EssyIntro.getProgress();
+        }
+        return 0;
+      }
+
+      /* ------------------------------------------------------------
+         1. SCROLL DISCOVERY — staged hint fade + orb retirement
+         - hint: opacity drops from the very first scroll, completely
+           gone by ~18% (the scrubber controller adds .hidden past 18%)
+         - orb: fades away after ~18% and never returns this visit
+         ------------------------------------------------------------ */
+      var orbGone = false;
+      var orbLive = false;
+      var tipTimer = null;
+
+      function applyDiscovery() {
+        var p = getProgress();
+        if (hint) {
+          hint.classList.toggle('essy-intro-hint-fading', p > 0.02 && p <= 0.18);
+        }
+        if (orb && !orbGone && p > 0.18) {
+          orbGone = true;
+          orb.classList.remove('essy-intro-orb-live');
+          orb.classList.add('essy-intro-orb-gone');
+          orbTip.classList.remove('essy-orb-tip-show');
+          if (tipTimer) { clearTimeout(tipTimer); tipTimer = null; }
+        }
+      }
+
+      if (scroller) {
+        scroller.addEventListener('scroll', applyDiscovery, { passive: true });
+      }
+
+      /* ------------------------------------------------------------
+         2. ASSISTANT ORB — idle float + rotating tooltips
+         Tooltip every 6–8s (first one sooner), visible 2.8s, then a
+         gentle fade. Skipped entirely for reduced motion.
+         ------------------------------------------------------------ */
+      var TIPS = [
+        'Scroll to reveal the craftsmanship',
+        'Explore what\u2019s inside',
+        'Precision engineered',
+        'Discover every detail',
+        'Continue scrolling'
+      ];
+
+      function scheduleTip(delay) {
+        if (!orbLive || orbGone || reduced) return;
+        if (window.EssyIntro && !window.EssyIntro.isReady()) {
+          tipTimer = setTimeout(function () { scheduleTip(6000); }, 1500);
+          return;
+        }
+        tipTimer = setTimeout(function () {
+          if (!orbLive || orbGone || reduced) return;
+          orbTip.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+          orbTip.classList.add('essy-orb-tip-show');
+          setTimeout(function () {
+            orbTip.classList.remove('essy-orb-tip-show');
+            if (!orbGone && orbLive && !reduced) scheduleTip(6000 + Math.random() * 2000);
+          }, 2800);
+        }, delay);
+      }
+
+      // Wake the orb shortly after the intro opens. Guarded so it never
+      // activates once the user has skipped out (avoids leaked timers).
+      function activateOrb() {
+        if (orbLive || orbGone) return;
+        if (window.EssyIntro && !window.EssyIntro.isShowing()) return;
+        orbLive = true;
+        if (orb) orb.classList.add('essy-intro-orb-live');
+        applyDiscovery();
+        if (!reduced) scheduleTip(4500);
+      }
+
+      if (intro.classList.contains('essy-intro-open')) {
+        setTimeout(activateOrb, 900);
+      } else {
+        var openObserver = new MutationObserver(function () {
+          if (intro.classList.contains('essy-intro-open')) {
+            openObserver.disconnect();
+            setTimeout(activateOrb, 900);
+          }
+        });
+        openObserver.observe(intro, { attributes: true, attributeFilter: ['class'] });
+      }
+
+      document.addEventListener('essy:intro-done', function () {
+        orbLive = false;
+        if (tipTimer) { clearTimeout(tipTimer); tipTimer = null; }
+      });
+
+      /* ------------------------------------------------------------
+         3. AMBIENT FX CANVAS — golden dust, perfume mist, molecules
+         Lightweight rAF particle field with gentle scroll inertia.
+         Disabled entirely for reduced motion. ~70 particles on
+         desktop, fewer on mobile; DPR capped at 1.5.
+         ------------------------------------------------------------ */
+      var fxCanvas = document.getElementById('ambient-fx');
+
+      if (fxCanvas && !reduced) {
+        var fctx = fxCanvas.getContext('2d');
+        var DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+        var W = 0, H = 0;
+        var dust = [], mist = [], mols = [];
+        var DUST_N = window.innerWidth < 768 ? 26 : 48;
+        var MIST_N = window.innerWidth < 768 ? 3 : 5;
+        var MOL_N  = window.innerWidth < 768 ? 8 : 14;
+        var raf = 0, running = false;
+        var velocity = 0, lastY = 0;
+
+        function rnd(a, b) { return a + Math.random() * (b - a); }
+
+        function resize() {
+          W = window.innerWidth;
+          H = window.innerHeight;
+          fxCanvas.width = Math.round(W * DPR);
+          fxCanvas.height = Math.round(H * DPR);
+          fctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+
+        function makeDust() {
+          return { x: rnd(0, W), y: rnd(-H * 0.1, H), r: rnd(0.5, 1.6),
+                   vy: rnd(0.08, 0.28), ph: rnd(0, 6.283), sp: rnd(0.5, 1.6),
+                   a: rnd(0.14, 0.38), depth: rnd(0.3, 1) };
+        }
+        function makeMol() {
+          return { x: rnd(0, W), y: rnd(0, H), r: rnd(1.1, 2.2),
+                   vy: rnd(-0.07, 0.07), ph: rnd(0, 6.283), tw: rnd(1, 2.6),
+                   a: rnd(0.22, 0.5) };
+        }
+        function makeMist() {
+          return { x: rnd(0, W), y: rnd(H * 0.15, H * 0.9), r: rnd(80, 160),
+                   vx: rnd(-0.07, 0.07), vy: rnd(-0.05, 0.05),
+                   a: rnd(0.02, 0.045) };
+        }
+
+        function draw() {
+          if (running) raf = requestAnimationFrame(draw);
+          if (document.hidden) return;
+          fctx.clearRect(0, 0, W, H);
+          velocity *= 0.92;
+          var t = performance.now() / 1000;
+          var i, p, g;
+
+          // Perfume mist — big near-invisible blobs drifting with inertia
+          for (i = 0; i < mist.length; i++) {
+            p = mist[i];
+            p.x += p.vx + velocity * 0.12;
+            p.y += p.vy;
+            if (p.x < -p.r) p.x = W + p.r; else if (p.x > W + p.r) p.x = -p.r;
+            if (p.y < -p.r) p.y = H + p.r; else if (p.y > H + p.r) p.y = -p.r;
+            g = fctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+            g.addColorStop(0, 'rgba(255, 214, 156, ' + p.a.toFixed(3) + ')');
+            g.addColorStop(1, 'rgba(255, 214, 156, 0)');
+            fctx.fillStyle = g;
+            fctx.beginPath();
+            fctx.arc(p.x, p.y, p.r, 0, 6.283);
+            fctx.fill();
+          }
+
+          // Golden dust — slow upward drift, gentle sway + scroll inertia
+          for (i = 0; i < dust.length; i++) {
+            p = dust[i];
+            p.y -= p.vy;
+            p.x += Math.sin(t * p.sp + p.ph) * 0.16 + velocity * p.depth * 0.3;
+            if (p.y < -8) { p.y = H + 8; p.x = rnd(0, W); }
+            if (p.x < -8) p.x = W + 8; else if (p.x > W + 8) p.x = -8;
+            fctx.globalAlpha = p.a * (0.6 + 0.4 * Math.sin(t * 1.4 + p.ph));
+            fctx.fillStyle = '#ffd49a';
+            fctx.beginPath();
+            fctx.arc(p.x, p.y, p.r, 0, 6.283);
+            fctx.fill();
+          }
+
+          // Fragrance molecules — twinkling bright specks
+          for (i = 0; i < mols.length; i++) {
+            p = mols[i];
+            p.y += p.vy;
+            p.x += Math.sin(t * 0.6 + p.ph) * 0.05 + velocity * 0.2;
+            if (p.y < -6) p.y = H + 6; else if (p.y > H + 6) p.y = -6;
+            if (p.x < -6) p.x = W + 6; else if (p.x > W + 6) p.x = -6;
+            fctx.globalAlpha = p.a * (0.35 + 0.65 * Math.pow(0.5 + 0.5 * Math.sin(t * p.tw + p.ph), 2));
+            fctx.fillStyle = '#ffe9be';
+            fctx.beginPath();
+            fctx.arc(p.x, p.y, p.r, 0, 6.283);
+            fctx.fill();
+          }
+          fctx.globalAlpha = 1;
+        }
+
+        function startFx() {
+          if (running) return;
+          running = true;
+          resize();
+          for (var i = 0; i < DUST_N; i++) dust.push(makeDust());
+          for (var j = 0; j < MOL_N; j++) mols.push(makeMol());
+          for (var k = 0; k < MIST_N; k++) mist.push(makeMist());
+          window.addEventListener('resize', resize, { passive: true });
+          if (scroller) {
+            // Baseline the delta so the first scroll doesn't spike velocity
+            lastY = scroller.scrollTop;
+            scroller.addEventListener('scroll', function () {
+              var y = scroller.scrollTop;
+              var d = y - lastY;
+              lastY = y;
+              velocity = Math.max(-5, Math.min(5, velocity + d * 0.12));
+            }, { passive: true });
+          }
+          draw();
+        }
+
+        // Pause the particle loop when the tab is hidden
+        document.addEventListener('visibilitychange', function () {
+          if (!running) return;
+          if (document.hidden) {
+            cancelAnimationFrame(raf);
+          } else {
+            draw();
+          }
+        });
+
+        document.addEventListener('essy:intro-done', function () {
+          running = false;
+          cancelAnimationFrame(raf);
+          window.removeEventListener('resize', resize);
+        });
+
+        // Start the loop when the intro opens (or immediately if already open)
+        if (intro.classList.contains('essy-intro-open')) {
+          startFx();
+        } else {
+          var fxObserver = new MutationObserver(function () {
+            if (intro.classList.contains('essy-intro-open')) {
+              fxObserver.disconnect();
+              startFx();
+            }
+          });
+          fxObserver.observe(intro, { attributes: true, attributeFilter: ['class'] });
+        }
+      }
+    })();
+  </script>
+
+
+  <!-- ============================================================ -->
+  <!-- ================= HEADER & NAVIGATION ======================= -->
+  <!-- Sticky white nav. Edit the logo text, links, and store name. -->
+  <!-- ============================================================ -->
+  <!-- Sticky nav. Mobile: full-width white bar. Desktop (md+): a   -->
+  <!-- floating glassmorphism pill with a magenta accent underline.  -->
+  <header id="nav" class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm md:top-3 md:border-0 md:bg-transparent md:px-3 md:shadow-none lg:px-6">
+    <nav class="mx-auto max-w-7xl h-16 md:h-[4.5rem] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 md:rounded-2xl md:border md:border-white/70 md:bg-white/80 md:shadow-xl md:shadow-pink-900/10 md:backdrop-blur-xl md:backdrop-saturate-150" aria-label="Main navigation">
+
+      <!-- LOGO (ESSY SELLS brand mark + tagline) -->
+      <a href="#home" class="flex items-center gap-3 shrink-0">
+        <img src="./logo.jpg" alt="Essy Sells Logo" class="h-10 w-auto rounded-md" />
+        <span class="leading-tight">
+          <span class="block text-lg sm:text-xl font-extrabold tracking-tight text-gray-900">ESSY SELLS</span>
+          <span class="hidden sm:block text-[9px] sm:text-[10px] font-bold tracking-[0.2em] uppercase bg-gradient-to-r from-[#BE185D] to-[#EC4899] bg-clip-text text-transparent">All You Can Ever Need</span>
+        </span>
+      </a>
+
+      <!-- CENTER LINKS -->
+      <ul class="hidden md:flex items-center gap-7 lg:gap-9 text-sm font-medium">
+        <li><a href="#home" class="nav-link text-gray-900 transition-colors">Home</a></li>
+        <li><a href="#shop" class="nav-link text-gray-700 transition-colors">Shop</a></li>
+        <li><a href="#shop" class="nav-link text-gray-700 transition-colors">Categories</a></li>
+        <li><a href="#footer" class="nav-link text-gray-700 transition-colors">Contact</a></li>
+      </ul>
+
+      <!-- RIGHT: mobile menu button + cart icon (≥48px touch targets on mobile) -->
+      <div class="flex items-center gap-2">
+        <!-- Mobile hamburger (toggles the mobile menu below) -->
+        <button id="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu"
+          class="md:hidden w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center text-gray-700 hover:text-[#BE185D] hover:border-pink-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- CART ICON with dynamic red badge (#cart-badge is updated by JS) -->
+        <button id="cart-toggle" type="button" aria-label="Open cart"
+          class="relative w-12 h-12 md:w-10 md:h-10 rounded-xl border border-gray-200 flex items-center justify-center text-gray-700 hover:text-[#BE185D] hover:border-pink-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span id="cart-badge" class="hidden flex absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[11px] font-bold items-center justify-center">0</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200 bg-white/95 backdrop-blur">
+      <ul class="px-4 py-3 space-y-1 text-sm font-medium">
+        <li><a href="#home" class="block px-4 py-3 rounded-lg hover:bg-pink-50 hover:text-[#BE185D] transition-colors">Home</a></li>
+        <li><a href="#shop" class="block px-4 py-3 rounded-lg hover:bg-pink-50 hover:text-[#BE185D] transition-colors">Shop</a></li>
+        <li><a href="#shop" class="block px-4 py-3 rounded-lg hover:bg-pink-50 hover:text-[#BE185D] transition-colors">Categories</a></li>
+        <li><a href="#footer" class="block px-4 py-3 rounded-lg hover:bg-pink-50 hover:text-[#BE185D] transition-colors">Contact</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============================================================ -->
+    <!-- ================= HERO SECTION (#home) ====================== -->
+    <!-- Edit the headline, subheadline, and swap the <img> src with  -->
+    <!-- your own hero image.                                         -->
+    <!-- ============================================================ -->
+    <section id="home" class="relative overflow-hidden bg-gradient-to-br from-orange-50 via-white to-pink-50/60 border-b border-gray-200">
+      <!-- Ambient magenta mesh blobs (decorative; disabled for reduced motion) -->
+      <div aria-hidden="true" class="hero-blob pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-pink-300/40 blur-3xl"></div>
+      <div aria-hidden="true" class="hero-blob-b pointer-events-none absolute top-1/3 -right-28 h-80 w-80 rounded-full bg-purple-300/30 blur-3xl"></div>
+      <div aria-hidden="true" class="hero-blob pointer-events-none absolute -bottom-20 left-1/3 h-64 w-64 rounded-full bg-rose-200/40 blur-3xl"></div>
+
+      <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 items-center">
+
+        <!-- LEFT: copy -->
+        <div>
+          <!-- data-reveal-hero elements are staggered in by the Motion
+               script the moment the splash screen disappears. -->
+          <span data-reveal-hero class="inline-flex items-center gap-2 rounded-full border border-pink-200 bg-pink-50/80 px-4 py-1.5 text-xs font-semibold text-[#BE185D] shadow-sm">
+            <i class="fa-solid fa-truck-fast"></i>
+            Free delivery on orders over ₦50,000
+          </span>
+
+          <h1 data-reveal-hero class="mt-5 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+            Premium Gear,<br />
+            <span class="bg-gradient-to-r from-[#BE185D] via-[#EC4899] to-[#8B5CF6] bg-clip-text text-transparent">Unbeatable Prices</span>
+          </h1>
+
+          <p data-reveal-hero class="mt-5 max-w-xl text-lg leading-relaxed text-gray-600">
+            Fast delivery across Nigeria, 100% genuine products, and a quality
+            guarantee on everything we sell. Shop with total confidence.
+          </p>
+
+          <!-- HERO CTA (scrolls to the product grid) -->
+          <div data-reveal-hero class="mt-8 flex flex-wrap gap-4">
+            <a href="#shop" class="hero-cta-primary group inline-flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-7 py-4 text-sm font-bold text-white shadow-md shadow-orange-500/25 transition-colors hover:shadow-lg hover:shadow-orange-500/30">
+              Shop the Sale
+              <i class="fa-solid fa-arrow-right transition-transform duration-300 group-hover:translate-x-1"></i>
+            </a>
+            <a href="#shop" class="hero-cta-secondary inline-flex items-center gap-2 rounded-xl border border-pink-200 bg-white/70 backdrop-blur px-7 py-4 text-sm font-bold text-gray-700 transition-colors hover:border-[#EC4899] hover:text-[#BE185D] hover:bg-pink-50/60">
+              <i class="fa-solid fa-circle-info"></i>
+              Learn More
+            </a>
+          </div>
+
+          <!-- TRUST SIGNALS -->
+          <ul data-reveal-hero class="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+            <li class="flex items-center gap-2"><i class="fa-solid fa-shield-halved text-[#BE185D]"></i> 100% Genuine Products</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-rotate-left text-[#BE185D]"></i> 7-Day Easy Returns</li>
+            <li class="flex items-center gap-2"><i class="fa-solid fa-bolt text-[#BE185D]"></i> Same-Day Dispatch</li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: hero image (replace src with your own) -->
+        <div data-reveal-hero class="relative">
+          <!-- Soft magenta halo behind the image -->
+          <div aria-hidden="true" class="absolute -inset-4 -z-10 rounded-[2rem] bg-gradient-to-tr from-pink-200/60 via-white to-purple-200/60 blur-2xl"></div>
+          <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&amp;fit=crop&amp;w=1000&amp;q=80"
+               alt="Hand holding a modern smartphone"
+               class="w-full h-72 sm:h-96 object-cover rounded-3xl border border-white/60 ring-1 ring-gray-900/5 shadow-2xl shadow-pink-900/10" loading="eager" />
+          <!-- Floating glass price badge -->
+          <div class="animate-float glass-card absolute -bottom-4 left-6 rounded-2xl px-5 py-3 shadow-lg shadow-pink-900/10">
+            <p class="text-xs text-gray-500">Starting from</p>
+            <p class="text-lg font-extrabold text-gray-900">₦3,000</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ================= PRODUCT GRID (#shop) ====================== -->
+    <!-- Products are NO LONGER hardcoded here. The #product-grid      -->
+    <!-- container below is filled dynamically by renderStorefront()   -->
+    <!-- from the products array in localStorage (see the script at    -->
+    <!-- the bottom of the page). The store owner manages stock from   -->
+    <!-- the hidden Admin Dashboard (footer > Admin > passcode 1234).  -->
+    <!-- ============================================================ -->
+    <section id="shop" class="bg-white py-16 sm:py-20">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+        <!-- Section heading (reveals on scroll via Motion) -->
+        <div data-reveal class="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold tracking-widest text-[#BE185D] uppercase">Hot Deals</p>
+            <h2 class="mt-2 text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-900">Featured Products</h2>
+          </div>
+          <p class="text-sm text-gray-500">Genuine accessories for Infinix, Redmi &amp; more</p>
+        </div>
+
+        <!-- PRODUCT GRID: 1 col mobile, 2 tablet, 3 desktop (md). -->
+        <!-- Cards are injected here by renderStorefront() and animated  -->
+        <!-- by the Motion script (window.EssyAnimations.initProductCards). -->
+        <div id="product-grid" class="mt-10 grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============================================================ -->
+  <!-- ============ ADMIN DASHBOARD (#admin-dashboard) ============= -->
+  <!-- Hidden by default via CSS. Revealed when the correct          -->
+  <!-- passcode (1234) is entered from the footer > Admin link.      -->
+  <!-- ============================================================ -->
+  <section id="admin-dashboard" class="min-h-screen bg-gray-100" aria-label="Admin dashboard">
+
+    <!-- Dashboard header -->
+    <header class="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center shadow-md shadow-emerald-500/30">
+            <i class="fa-solid fa-store text-white"></i>
+          </span>
+          <div>
+            <h1 class="text-base font-extrabold text-gray-900 leading-tight">Store Management</h1>
+            <p class="text-xs text-gray-500">Admin dashboard · changes go live instantly</p>
+          </div>
+        </div>
+        <button id="admin-logout" type="button"
+          class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition-all hover:border-red-300 hover:text-red-600 hover:bg-red-50">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          Logout / Back to Store
+        </button>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 grid gap-6 lg:grid-cols-5 items-start">
+
+      <!-- LEFT COLUMN: upload form + store stats -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Upload form card -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div class="flex items-center gap-2 mb-5">
+            <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+            <h2 class="text-base font-bold text-gray-900">Add New Product</h2>
+          </div>
+
+          <form id="admin-form" class="space-y-4" novalidate>
+            <!-- Product name -->
+            <div>
+              <label for="product-name" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Product Name</label>
+              <input type="text" id="product-name" placeholder="e.g. Wireless Earbuds" autocomplete="off" maxlength="80"
+                class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow" />
+            </div>
+
+            <!-- Price (numbers only — enforced by JS too) -->
+            <div>
+              <label for="product-price" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Price (₦)</label>
+              <input type="text" id="product-price" inputmode="decimal" placeholder="e.g. 12500" autocomplete="off"
+                class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow" />
+              <p class="mt-1 text-[11px] text-gray-400">Numbers only</p>
+            </div>
+
+            <!-- Image upload (styled as a dropzone; the real input is visually hidden) -->
+            <div>
+              <label for="product-image" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Product Image</label>
+              <label for="product-image"
+                class="group flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors cursor-pointer px-4 py-6 text-center">
+                <span class="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center">
+                  <i class="fa-solid fa-cloud-arrow-up text-gray-400 group-hover:text-emerald-600 transition-colors"></i>
+                </span>
+                <span class="text-sm font-semibold text-gray-700">Click to upload</span>
+                <span class="text-xs text-gray-400">PNG, JPG or WebP · auto-compressed</span>
+              </label>
+              <input type="file" id="product-image" accept="image/*" class="sr-only" />
+              <!-- Live thumbnail preview of the chosen file -->
+              <img id="image-preview" alt="Image preview" class="hidden mt-3 w-full max-h-48 object-cover rounded-xl border border-gray-200" />
+            </div>
+
+            <!-- Submit (strong emerald accent) -->
+            <button type="submit"
+              class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-emerald-500/25 transition-all hover:shadow-lg hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]">
+              <i class="fa-solid fa-cart-plus"></i> Add Product
+            </button>
+          </form>
+        </div>
+
+        <!-- Quick stats card -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <h2 class="text-base font-bold text-gray-900 mb-4">Store Overview</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+              <p class="text-xs font-semibold text-emerald-700">Products</p>
+              <p id="admin-count" class="mt-1 text-2xl font-extrabold text-gray-900">0 products</p>
+            </div>
+            <div class="rounded-xl bg-orange-50 border border-orange-100 p-4">
+              <p class="text-xs font-semibold text-orange-700">Total Value</p>
+              <p id="admin-total-value" class="mt-1 text-2xl font-extrabold text-gray-900">₦0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: inventory table -->
+      <div class="lg:col-span-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center">
+              <i class="fa-solid fa-boxes-stacked"></i>
+            </span>
+            <h2 class="text-base font-bold text-gray-900">Inventory</h2>
+          </div>
+          <span class="text-xs font-semibold text-gray-500 bg-gray-100 rounded-full px-3 py-1">Live from localStorage</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-left text-xs font-bold text-gray-500 uppercase tracking-wide bg-gray-50">
+                <th class="px-6 py-3">Product</th>
+                <th class="px-6 py-3">Price</th>
+                <th class="px-6 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-inventory"><!-- rows injected by renderAdminInventory() --></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin toast (own element; the storefront toast is hidden in admin mode) -->
+    <div id="admin-toast" role="status" aria-live="polite"
+      class="fixed bottom-6 left-1/2 z-[80] bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl flex items-center gap-2">
+      <i class="fa-solid fa-circle-check text-emerald-400"></i>
+      <span id="admin-toast-message">Saved</span>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- ================= FOOTER (#footer) ========================== -->
+  <!-- Edit store info, quick links, and contact details.           -->
+  <!-- ============================================================ -->
+  <footer id="footer" class="bg-gray-50 border-t border-gray-200">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 grid gap-10 md:grid-cols-3">
+
+      <!-- Brand (staggered reveal on scroll) -->
+      <div data-reveal>
+        <a href="#home" class="flex items-center gap-3">
+          <img src="./logo.jpg" alt="Essy Sells Logo" class="h-10 w-auto rounded-md" />
+          <span class="leading-tight">
+            <span class="block text-xl font-extrabold tracking-tight text-gray-900">ESSY SELLS</span>
+            <span class="block text-[10px] font-bold tracking-[0.2em] uppercase bg-gradient-to-r from-[#BE185D] to-[#EC4899] bg-clip-text text-transparent">All You Can Ever Need</span>
+          </span>
+        </a>
+        <p class="mt-4 text-sm leading-relaxed text-gray-600 max-w-xs">
+          All you can ever need — beauty, accessories and more at unbeatable
+          prices. Fast delivery, genuine products, and support you can trust.
+        </p>
+      </div>
+
+      <!-- Quick links -->
+      <div data-reveal data-reveal-delay="0.08">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Quick Links</h3>
+        <ul class="mt-4 space-y-2.5 text-sm">
+          <li><a href="#home" class="text-gray-600 hover:text-[#BE185D] transition-colors">Home</a></li>
+          <li><a href="#shop" class="text-gray-600 hover:text-[#BE185D] transition-colors">Shop</a></li>
+          <li><a href="#shop" class="text-gray-600 hover:text-[#BE185D] transition-colors">Categories</a></li>
+          <li><a href="#footer" class="text-gray-600 hover:text-[#BE185D] transition-colors">Contact</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact -->
+      <div data-reveal data-reveal-delay="0.16">
+        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wide">Contact Us</h3>
+        <ul class="mt-4 space-y-3 text-sm text-gray-600">
+          <li class="flex items-center gap-3">
+            <i class="fa-solid fa-envelope text-[#BE185D] w-4"></i>
+            <a href="mailto:hello@techstore.ng" class="hover:text-[#BE185D] transition-colors">hello@techstore.ng</a>
+          </li>
+          <li class="flex items-center gap-3">
+            <i class="fa-solid fa-phone text-[#BE185D] w-4"></i>
+            <a href="tel:+2348000000000" class="hover:text-[#BE185D] transition-colors">+234 800 000 0000</a>
+          </li>
+          <li class="flex items-center gap-3">
+            <i class="fa-solid fa-location-dot text-[#BE185D] w-4"></i>
+            <span>Lagos, Nigeria</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom bar (contains the subtle hidden Admin link) -->
+    <div class="border-t border-gray-200">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+        <p>© <span id="year">2026</span> ESSY SELLS. All rights reserved.</p>
+        <div class="flex items-center gap-4">
+          <p>Made with <i class="fa-solid fa-heart text-[#EC4899]"></i> for Nigerian shoppers</p>
+          <!-- Subtle Admin link — opens the passcode modal (default: 1234) -->
+          <button id="admin-link" type="button"
+            class="text-xs font-medium text-gray-400 hover:text-[#BE185D] transition-colors flex items-center gap-1">
+            <i class="fa-solid fa-user-shield"></i> Admin
+          </button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================ -->
+  <!-- ============ ADMIN PASSCODE MODAL =========================== -->
+  <!-- Hidden login. Triggered by the footer "Admin" link.           -->
+  <!-- Default passcode: 1234 (see PASSCODE in the JS below).        -->
+  <!-- ============================================================ -->
+  <div id="admin-modal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Admin login">
+    <div id="admin-modal-overlay" class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm"></div>
+
+    <div class="admin-modal-card relative w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6">
+      <div class="flex items-center gap-3">
+        <span class="w-11 h-11 rounded-xl bg-emerald-500 flex items-center justify-center shadow-md shadow-emerald-500/30">
+          <i class="fa-solid fa-lock text-white"></i>
+        </span>
+        <div>
+          <h3 class="text-lg font-extrabold text-gray-900 leading-tight">Admin Access</h3>
+          <p class="text-xs text-gray-500">Store owner only</p>
+        </div>
+      </div>
+
+      <p class="mt-4 text-sm text-gray-600">Enter the store passcode to open the dashboard.</p>
+
+      <form id="admin-login-form" class="mt-4 space-y-4">
+        <input type="password" id="admin-passcode" inputmode="numeric" placeholder="Enter passcode" autocomplete="off"
+          class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-center text-lg tracking-[0.4em] text-gray-900 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-shadow" />
+        <p id="admin-passcode-error" class="hidden text-xs font-semibold text-red-600 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-exclamation"></i> Incorrect passcode — try again.
+        </p>
+
+        <div class="flex gap-3">
+          <button type="button" id="admin-modal-cancel"
+            class="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-50">
+            Cancel
+          </button>
+          <button type="submit"
+            class="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-500/25 transition-all hover:shadow-lg active:scale-[0.98]">
+            <i class="fa-solid fa-arrow-right-to-bracket mr-1"></i> Unlock
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ================= SHOPPING CART SIDEBAR ===================== -->
+  <!-- Fixed right-aligned panel. The #cart-items container is       -->
+  <!-- filled dynamically by JavaScript.                             -->
+  <!-- ============================================================ -->
+
+  <!-- Dark overlay behind the cart (click to close) -->
+  <div id="cart-overlay" class="fixed inset-0 z-40 bg-gray-900/40 opacity-0 pointer-events-none transition-opacity duration-300" aria-hidden="true"></div>
+
+  <!-- The slide-out cart panel -->
+  <aside id="cart-sidebar" role="dialog" aria-modal="true" class="fixed top-0 right-0 z-50 h-full w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col" aria-label="Shopping cart">
+    <!-- Cart header -->
+    <header class="flex items-center justify-between px-6 h-16 border-b border-gray-200 shrink-0">
+      <h2 class="text-lg font-bold text-gray-900">Your Cart</h2>
+      <button id="cart-close" type="button" aria-label="Close cart"
+        class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </header>
+
+    <!-- Cart items (injected by JS) -->
+    <div id="cart-items" class="flex-1 overflow-y-auto px-6 py-5 space-y-5"></div>
+
+    <!-- Cart footer -->
+    <footer class="px-6 py-5 border-t border-gray-200 shrink-0 space-y-4 bg-gray-50">
+      <!-- Subtotal row (#cart-subtotal is updated by JS) -->
+      <div class="flex items-center justify-between">
+        <p class="text-sm font-medium text-gray-600">Subtotal</p>
+        <p id="cart-subtotal" class="text-xl font-extrabold text-gray-900">₦0</p>
+      </div>
+      <p class="text-xs text-gray-500">Delivery and taxes calculated at checkout.</p>
+      <button id="checkout-btn" type="button"
+        class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 px-6 py-4 text-sm font-bold text-white shadow-md shadow-orange-500/25 transition-all hover:shadow-lg hover:shadow-orange-500/30 active:scale-[0.99]">
+        <i class="fa-solid fa-lock"></i> Proceed to Checkout
+      </button>
+    </footer>
+  </aside>
+
+  <!-- ============================================================ -->
+  <!-- ============ WHATSAPP CHECKOUT DRAWER ====================== -->
+  <!-- Slide-out drawer with the order summary and delivery-details  -->
+  <!-- form. Submitting builds a formatted WhatsApp message from the -->
+  <!-- cart and opens https://wa.me/2348148822322?text=...           -->
+  <!-- ============================================================ -->
+  <aside id="checkout-sidebar" role="dialog" aria-modal="true" class="fixed top-0 right-0 z-[55] h-full w-full sm:w-[30rem] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col" aria-label="Checkout">
+    <!-- Checkout header -->
+    <header class="flex items-center justify-between px-6 h-16 border-b border-gray-200 shrink-0">
+      <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+        <i class="fa-solid fa-truck-fast text-orange-500"></i> Checkout
+      </h2>
+      <button id="checkout-close" type="button" aria-label="Close checkout"
+        class="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:border-gray-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </header>
+
+    <form id="checkout-form" class="flex-1 flex flex-col min-h-0" novalidate>
+      <!-- Scrollable middle: order summary + delivery details -->
+      <div class="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
+        <!-- ORDER SUMMARY -->
+        <section>
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wide">Order Summary</h3>
+            <span id="checkout-item-count" class="text-xs font-semibold text-gray-500 bg-gray-100 rounded-full px-2.5 py-0.5">0 items</span>
+          </div>
+          <div id="checkout-summary" class="mt-2 divide-y divide-gray-100"><!-- rows injected by renderCheckoutSummary() --></div>
+        </section>
+
+        <!-- DELIVERY DETAILS -->
+        <section>
+          <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wide">Delivery Details</h3>
+          <div class="mt-3 space-y-4">
+
+            <!-- Full name -->
+            <div>
+              <label for="checkout-name" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Full Name</label>
+              <input type="text" id="checkout-name" placeholder="e.g. Ada Obi" autocomplete="name"
+                class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-shadow" />
+            </div>
+
+            <!-- Phone number -->
+            <div>
+              <label for="checkout-phone" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Phone Number</label>
+              <input type="tel" id="checkout-phone" inputmode="tel" placeholder="e.g. 0803 123 4567" autocomplete="tel"
+                class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-shadow" />
+            </div>
+
+            <!-- Delivery address & city -->
+            <div>
+              <label for="checkout-address" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Delivery Address &amp; City</label>
+              <textarea id="checkout-address" rows="2" placeholder="e.g. 12 Herbert Macaulay Way, Yaba, Lagos" autocomplete="street-address"
+                class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-shadow resize-none"></textarea>
+            </div>
+
+            <!-- Notes / preferred delivery date (optional) -->
+            <div>
+              <label for="checkout-notes" class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Notes / Preferred Delivery Date <span class="font-medium normal-case text-gray-400">(optional)</span></label>
+              <input type="text" id="checkout-notes" placeholder="e.g. Deliver after 5pm on Saturday" autocomplete="off"
+                class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-shadow" />
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Sticky footer: totals + WhatsApp CTA -->
+      <footer class="px-6 py-5 border-t border-gray-200 shrink-0 space-y-4 bg-gray-50">
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-sm">
+            <p class="font-medium text-gray-600">Subtotal</p>
+            <p id="checkout-subtotal" class="font-bold text-gray-900">₦0</p>
+          </div>
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-gray-600">Total</p>
+            <p id="checkout-total" class="text-xl font-extrabold text-gray-900">₦0</p>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500">Delivery and taxes calculated at checkout.</p>
+        <button type="submit"
+          class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1EB857] px-6 py-4 text-sm font-bold text-white shadow-md shadow-green-500/25 transition-all hover:shadow-lg hover:shadow-green-500/30 active:scale-[0.99]">
+          <i class="fa-brands fa-whatsapp text-lg"></i> Complete Order on WhatsApp
+        </button>
+        <p class="text-xs text-gray-400 text-center">You'll be redirected to WhatsApp to confirm your order.</p>
+      </footer>
+    </form>
+  </aside>
+
+  <!-- Toast notification (shown when an item is added) -->
+  <div id="toast" role="status" aria-live="polite" class="fixed bottom-6 left-1/2 z-[60] bg-gray-900 text-white text-sm font-medium px-5 py-3 rounded-xl shadow-xl flex items-center gap-2">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toast-message">Added to cart</span>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- ================= VANILLA JAVASCRIPT ======================== -->
+  <!-- Cart state, add/update/remove logic, badge, subtotal, and     -->
+  <!-- sidebar toggle. No frameworks — everything is vanilla JS.     -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ------------------------------------------------------------
+         1. STATE
+         The cart is an array of items: { id, name, price, image, quantity }
+         ------------------------------------------------------------ */
+      let cart = [];
+
+      // Optional: persist the cart across page refreshes using localStorage.
+      // Remove these two lines if you don't want the cart to be remembered.
+      const STORAGE_KEY = 'techstore_cart';
+      function loadCart() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { return []; } }
+      function saveCart() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch (e) {} }
+
+      cart = loadCart();
+
+      /* ------------------------------------------------------------
+         2. DOM REFERENCES
+         ------------------------------------------------------------ */
+      const cartItemsEl  = document.getElementById('cart-items');
+      const cartSubtotal = document.getElementById('cart-subtotal');
+      const cartBadge    = document.getElementById('cart-badge');
+      const cartSidebar  = document.getElementById('cart-sidebar');
+      const cartOverlay  = document.getElementById('cart-overlay');
+      const body         = document.body;
+
+      // WhatsApp checkout drawer elements
+      const checkoutSidebar   = document.getElementById('checkout-sidebar');
+      const checkoutForm      = document.getElementById('checkout-form');
+      const checkoutSummary   = document.getElementById('checkout-summary');
+      const checkoutSubtotal  = document.getElementById('checkout-subtotal');
+      const checkoutTotal     = document.getElementById('checkout-total');
+      const checkoutItemCount = document.getElementById('checkout-item-count');
+
+      // Format a number as Naira, e.g. 12500 -> ₦12,500
+      function formatNaira(amount) {
+        return '₦' + Number(amount).toLocaleString('en-NG');
+      }
+
+      // Escape text before injecting it into innerHTML. Product names are
+      // now user-supplied via the admin dashboard, so they must never be
+      // rendered raw inside the cart markup.
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      /* ------------------------------------------------------------
+         3. ADD TO CART
+         Reads the data-* attributes from the clicked button. If the
+         item already exists in the cart, its quantity increases;
+         otherwise a new item is pushed.
+         ------------------------------------------------------------ */
+      function addToCart(id, name, price, image) {
+        const existing = cart.find(function (item) { return item.id === id; });
+
+        if (existing) {
+          existing.quantity += 1;               // already in cart → bump quantity
+        } else {
+          cart.push({ id: id, name: name, price: Number(price), image: image, quantity: 1 });
+        }
+
+        saveCart();                             // persist to localStorage
+        updateCartUI();                         // refresh badge, items, subtotal
+        showToast(name + ' added to cart');
+      }
+
+      /* ------------------------------------------------------------
+         4. UPDATE UI
+         Re-renders the cart items, subtotal, and navbar badge.
+         ------------------------------------------------------------ */
+      function updateCartUI() {
+        // --- Navbar red badge: total number of items ---
+        const totalItems = cart.reduce(function (sum, item) { return sum + item.quantity; }, 0);
+        cartBadge.textContent = totalItems;
+        cartBadge.classList.toggle('hidden', totalItems === 0);
+
+        // --- Cart items list (or empty state) ---
+        if (cart.length === 0) {
+          cartItemsEl.innerHTML =
+            '<div class="h-full flex flex-col items-center justify-center text-center py-16">' +
+              '<span class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">' +
+                '<i class="fa-solid fa-cart-shopping text-2xl text-gray-400"></i>' +
+              '</span>' +
+              '<p class="text-sm font-semibold text-gray-900">Your cart is empty</p>' +
+              '<p class="text-xs text-gray-500 mt-1">Add some great deals to get started.</p>' +
+            '</div>';
+        } else {
+          cartItemsEl.innerHTML = cart.map(function (item) {
+            return (
+              '<div class="flex gap-4" data-cart-item="' + item.id + '">' +
+                '<img src="' + item.image + '" alt="' + escapeHtml(item.name) + '" class="w-20 h-20 rounded-lg object-cover border border-gray-200 shrink-0" />' +
+                '<div class="flex-1 min-w-0">' +
+                  '<p class="text-sm font-semibold text-gray-900 truncate">' + escapeHtml(item.name) + '</p>' +
+                  '<p class="text-xs text-gray-500 mt-0.5">' + formatNaira(item.price) + ' each</p>' +
+                  '<div class="mt-2 flex items-center justify-between">' +
+                    '<div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">' +
+                      '<button type="button" data-action="decrease" data-id="' + item.id + '" aria-label="Decrease quantity" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:text-orange-600 transition-colors"><i class="fa-solid fa-minus text-xs"></i></button>' +
+                      '<span class="w-8 text-center text-sm font-semibold text-gray-900">' + item.quantity + '</span>' +
+                      '<button type="button" data-action="increase" data-id="' + item.id + '" aria-label="Increase quantity" class="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:text-orange-600 transition-colors"><i class="fa-solid fa-plus text-xs"></i></button>' +
+                    '</div>' +
+                    '<p class="text-sm font-bold text-gray-900">' + formatNaira(item.price * item.quantity) + '</p>' +
+                  '</div>' +
+                '</div>' +
+                '<button type="button" data-action="remove" data-id="' + item.id + '" aria-label="Remove item" class="self-start w-8 h-8 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center">' +
+                  '<i class="fa-solid fa-trash-can text-sm"></i>' +
+                '</button>' +
+              '</div>'
+            );
+          }).join('');
+        }
+
+        // --- Subtotal ---
+        const subtotal = getCartSubtotal();
+        cartSubtotal.textContent = formatNaira(subtotal);
+
+        // Keep the WhatsApp checkout summary in sync when the cart changes
+        if (!checkoutSidebar.classList.contains('translate-x-full')) {
+          renderCheckoutSummary();
+        }
+      }
+
+      /* ------------------------------------------------------------
+         5. CART ITEM CONTROLS (event delegation)
+         Handles + / − / remove clicks inside the cart, then re-renders.
+         ------------------------------------------------------------ */
+      cartItemsEl.addEventListener('click', function (event) {
+        const btn = event.target.closest('[data-action]');
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+        const item = cart.find(function (i) { return i.id === id; });
+        if (!item) return;
+
+        const action = btn.dataset.action;
+
+        if (action === 'increase') {
+          item.quantity += 1;
+        } else if (action === 'decrease') {
+          item.quantity -= 1;
+          if (item.quantity <= 0) {
+            cart = cart.filter(function (i) { return i.id !== id; });
+          }
+        } else if (action === 'remove') {
+          cart = cart.filter(function (i) { return i.id !== id; });
+        }
+
+        saveCart();
+        updateCartUI();
+      });
+
+      /* ------------------------------------------------------------
+         6. ADD-TO-CART BUTTONS (event delegation)
+         Any element with class .add-to-cart is picked up, even if new
+         product cards are added to the grid later.
+         ------------------------------------------------------------ */
+      document.addEventListener('click', function (event) {
+        const btn = event.target.closest('.add-to-cart');
+        if (!btn) return;
+        addToCart(btn.dataset.id, btn.dataset.name, btn.dataset.price, btn.dataset.image);
+      });
+
+      /* ------------------------------------------------------------
+         7. TOGGLE CART SIDEBAR
+         Slides the panel in/out, toggles the overlay, locks scroll.
+         ------------------------------------------------------------ */
+      function toggleCart(forceOpen) {
+        const willOpen = (forceOpen !== undefined)
+          ? forceOpen
+          : cartSidebar.classList.contains('translate-x-full');
+
+        cartSidebar.classList.toggle('translate-x-full', !willOpen);
+        cartOverlay.classList.toggle('opacity-0', !willOpen);
+        cartOverlay.classList.toggle('pointer-events-none', !willOpen);
+        body.classList.toggle('overflow-hidden', willOpen);
+        document.getElementById('cart-toggle').setAttribute('aria-label', willOpen ? 'Close cart' : 'Open cart');
+      }
+
+      // Open when the navbar cart icon is clicked
+      document.getElementById('cart-toggle').addEventListener('click', function () {
+        // Never let the cart slide in behind the checkout drawer — if the
+        // checkout is open, step back to the cart instead.
+        if (!checkoutSidebar.classList.contains('translate-x-full')) {
+          closeCheckout();
+        }
+        toggleCart(true);
+      });
+
+      // Close when the X button or overlay is clicked
+      document.getElementById('cart-close').addEventListener('click', function () {
+        toggleCart(false);
+      });
+      cartOverlay.addEventListener('click', function () {
+        if (!checkoutSidebar.classList.contains('translate-x-full')) {
+          closeCheckout();       // checkout is on top → close it first
+        } else {
+          toggleCart(false);
+        }
+      });
+
+      // Close on Escape key (checkout first, then cart)
+      document.addEventListener('keydown', function (event) {
+        if (event.key !== 'Escape') return;
+        if (!checkoutSidebar.classList.contains('translate-x-full')) {
+          closeCheckout();
+        } else if (!cartSidebar.classList.contains('translate-x-full')) {
+          toggleCart(false);
+        }
+      });
+
+      /* ------------------------------------------------------------
+         8. CHECKOUT BUTTON
+         Opens the WhatsApp checkout drawer. The empty-cart guard lives
+         inside openCheckout().
+         ------------------------------------------------------------ */
+      document.getElementById('checkout-btn').addEventListener('click', function () {
+        openCheckout();
+      });
+
+      /* ------------------------------------------------------------
+         9. TOAST NOTIFICATION
+         ------------------------------------------------------------ */
+      let toastTimer = null;
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-message').textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () {
+          toast.classList.remove('show');
+        }, 2200);
+      }
+
+      /* ------------------------------------------------------------
+         10. MOBILE NAV MENU
+         ------------------------------------------------------------ */
+      const navToggle = document.getElementById('nav-toggle');
+      const mobileMenu = document.getElementById('mobile-menu');
+
+      navToggle.addEventListener('click', function () {
+        const isOpen = mobileMenu.classList.toggle('hidden') === false;
+        navToggle.setAttribute('aria-expanded', String(isOpen));
+        navToggle.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+      });
+
+      // Close the mobile menu when a link inside it is clicked
+      mobileMenu.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          mobileMenu.classList.add('hidden');
+          navToggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      /* ------------------------------------------------------------
+         11. WHATSAPP CHECKOUT DRAWER
+         "Proceed to Checkout" opens a drawer with the order summary and
+         a delivery-details form. Submitting validates the required
+         fields, builds a formatted WhatsApp message from the cart array,
+         URL-encodes it, and opens:
+           https://wa.me/2348148822322?text=<encoded message>
+         ------------------------------------------------------------ */
+
+      // --- Open / close the drawer ---
+      function openCheckout() {
+        if (cart.length === 0) {
+          showToast('Your cart is empty');
+          return;
+        }
+        toggleCart(false);                       // close the cart panel behind it
+        renderCheckoutSummary();                 // fresh order summary
+        checkoutSidebar.classList.remove('translate-x-full');
+        cartOverlay.classList.remove('opacity-0');
+        cartOverlay.classList.remove('pointer-events-none');
+        body.classList.add('overflow-hidden');
+        // Move focus into the drawer once the slide-in transition begins
+        setTimeout(function () {
+          document.getElementById('checkout-name').focus();
+        }, 120);
+      }
+
+      function closeCheckout() {
+        checkoutSidebar.classList.add('translate-x-full');
+        // Only hide the overlay and unlock scroll once the cart is closed too
+        if (cartSidebar.classList.contains('translate-x-full')) {
+          cartOverlay.classList.add('opacity-0');
+          cartOverlay.classList.add('pointer-events-none');
+          body.classList.remove('overflow-hidden');
+        }
+      }
+
+      document.getElementById('checkout-close').addEventListener('click', closeCheckout);
+
+      // Shared helper: total cost of everything currently in the cart
+      function getCartSubtotal() {
+        return cart.reduce(function (sum, item) { return sum + item.price * item.quantity; }, 0);
+      }
+
+      // --- Order summary: item rows, subtotal, and total ---
+      function renderCheckoutSummary() {
+        const totalQty = cart.reduce(function (sum, item) { return sum + item.quantity; }, 0);
+        checkoutItemCount.textContent = totalQty + ' item' + (totalQty === 1 ? '' : 's');
+
+        if (cart.length === 0) {
+          checkoutSummary.innerHTML =
+            '<div class="py-10 text-center">' +
+              '<span class="mx-auto w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">' +
+                '<i class="fa-solid fa-cart-shopping text-xl text-gray-400"></i>' +
+              '</span>' +
+              '<p class="text-sm font-semibold text-gray-900">Your cart is empty</p>' +
+              '<p class="text-xs text-gray-500 mt-1">Add some items before checking out.</p>' +
+            '</div>';
+          checkoutSubtotal.textContent = '₦0';
+          checkoutTotal.textContent = '₦0';
+          return;
+        }
+
+        checkoutSummary.innerHTML = cart.map(function (item) {
+          return (
+            '<div class="flex items-center gap-3 py-3">' +
+              '<img src="' + item.image + '" alt="' + escapeHtml(item.name) + '" class="w-14 h-14 rounded-lg object-cover border border-gray-200 shrink-0" />' +
+              '<div class="flex-1 min-w-0">' +
+                '<p class="text-sm font-semibold text-gray-900 truncate">' + escapeHtml(item.name) + '</p>' +
+                '<p class="text-xs text-gray-500">' + formatNaira(item.price) + ' each</p>' +
+              '</div>' +
+              '<div class="text-right shrink-0">' +
+                '<p class="text-sm font-bold text-gray-900">' + formatNaira(item.price * item.quantity) + '</p>' +
+                '<p class="text-xs text-gray-400">x ' + item.quantity + '</p>' +
+              '</div>' +
+            '</div>'
+          );
+        }).join('');
+
+        const subtotal = getCartSubtotal();
+        checkoutSubtotal.textContent = formatNaira(subtotal);
+        checkoutTotal.textContent = formatNaira(subtotal);
+      }
+
+      // --- Form validation helpers (red border + ring on invalid fields) ---
+      function markInvalid(input) {
+        input.classList.add('border-red-400', 'ring-1', 'ring-red-400', 'focus:ring-red-400');
+        input.focus();
+      }
+      function clearInvalid(input) {
+        input.classList.remove('border-red-400', 'ring-1', 'ring-red-400', 'focus:ring-red-400');
+      }
+
+      // Drop the red error styling as soon as the user starts typing again
+      ['checkout-name', 'checkout-phone', 'checkout-address', 'checkout-notes'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', function () {
+          clearInvalid(this);
+        });
+      });
+
+      // --- Build the structured WhatsApp message from the cart ---
+      function buildWhatsAppMessage(customer) {
+        const lines = [
+          '🛍️ *NEW ORDER PLACED*',
+          '--------------------------------',
+          '*Items:*'
+        ];
+
+        // One line per item: - Name x Qty (₦Price)
+        cart.forEach(function (item) {
+          lines.push('- ' + item.name + ' x ' + item.quantity + ' (' + formatNaira(item.price) + ')');
+        });
+
+        const total = getCartSubtotal();
+
+        lines.push('');
+        lines.push('*Total Amount:* ' + formatNaira(total));
+        lines.push('--------------------------------');
+        lines.push('👤 *Customer Details:*');
+        lines.push('Name: ' + customer.name);
+        lines.push('Phone: ' + customer.phone);
+        lines.push('Address: ' + customer.address);
+        lines.push('Notes: ' + (customer.notes || '-'));
+
+        return lines.join('\n');
+      }
+
+      // --- Submit: validate, build the message, open WhatsApp ---
+      checkoutForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const nameEl = document.getElementById('checkout-name');
+        const phoneEl = document.getElementById('checkout-phone');
+        const addressEl = document.getElementById('checkout-address');
+        const notesEl = document.getElementById('checkout-notes');
+
+        const name = nameEl.value.trim();
+        const phone = phoneEl.value.trim();
+        const address = addressEl.value.trim();
+        const notes = notesEl.value.trim();
+
+        // Validate that Name, Phone, and Address are filled out
+        if (!name) {
+          markInvalid(nameEl);
+          showToast('Please enter your full name');
+          return;
+        }
+        if (!phone) {
+          markInvalid(phoneEl);
+          showToast('Please enter your phone number');
+          return;
+        }
+        if (phone.replace(/\D/g, '').length < 7) {
+          markInvalid(phoneEl);
+          showToast('Please enter a valid phone number');
+          return;
+        }
+        if (!address) {
+          markInvalid(addressEl);
+          showToast('Please enter your delivery address');
+          return;
+        }
+
+        // URL-encode the formatted message and open WhatsApp directly
+        const message = encodeURIComponent(buildWhatsAppMessage({ name: name, phone: phone, address: address, notes: notes }));
+        window.open('https://wa.me/2348148822322?text=' + message, '_blank');
+      });
+
+      /* ------------------------------------------------------------
+         12. INIT + FOOTER YEAR
+         ------------------------------------------------------------ */
+      updateCartUI(); // render any cart items restored from localStorage
+      document.getElementById('year').textContent = new Date().getFullYear();
+    })();
+  </script>
+
+  <!-- ============================================================ -->
+  <!-- ============ STOREFRONT + ADMIN DASHBOARD SCRIPT =========== -->
+  <!-- Products live in localStorage under 'store_products'. The     -->
+  <!-- storefront is rendered from that data, and the store owner    -->
+  <!-- manages it via the hidden Admin Dashboard (footer > Admin >   -->
+  <!-- passcode 1234). Everything runs locally — no backend.         -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ------------------------------------------------------------
+         1. STATE
+         `products` is the single source of truth for the store.
+         Each product looks like:
+           { id: Date.now(), name: string, price: number, image: base64 }
+         The initial value is loaded from localStorage (or an empty
+         array if nothing has been saved yet). The try/catch guards
+         against corrupted JSON that would otherwise crash the page.
+         ------------------------------------------------------------ */
+      const STORE_KEY = 'store_products';   // localStorage key
+      const PASSCODE = '1234';              // default admin passcode
+
+      let products = [];
+      try {
+        products = JSON.parse(localStorage.getItem(STORE_KEY)) || [];
+      } catch (e) {
+        products = [];
+      }
+
+      /* ------------------------------------------------------------
+         2. HELPERS
+         ------------------------------------------------------------ */
+
+      // Persist the products array to localStorage.
+      function saveProducts() {
+        try {
+          localStorage.setItem(STORE_KEY, JSON.stringify(products));
+        } catch (e) {
+          // Most common cause: base64 images pushed us past the ~5MB
+          // localStorage quota. Images are downscaled on upload (see
+          // readImageAsDataURL) to keep this from happening.
+          showAdminToast('Storage full — try a smaller image');
+        }
+      }
+
+      // Format a number as Naira, e.g. 12500 -> ₦12,500
+      function formatNaira(amount) {
+        return '₦' + Number(amount).toLocaleString('en-NG');
+      }
+
+      // Escape user-entered text before injecting it into HTML so a
+      // name like 34" <Armor Case> can never break the markup.
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      /* ------------------------------------------------------------
+         3. RENDER STOREFRONT
+         Loops over `products` and injects one Tailwind-styled product
+         card (image, name, ₦ price, Add to Cart) into #product-grid.
+         Shows a friendly placeholder when the store has no stock yet.
+         ------------------------------------------------------------ */
+      function renderStorefront() {
+        const grid = document.getElementById('product-grid');
+
+        // Empty state — no products uploaded yet
+        if (products.length === 0) {
+          grid.innerHTML =
+            '<div class="col-span-full flex flex-col items-center justify-center text-center py-20 px-6 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50">' +
+              '<span class="w-20 h-20 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center mb-5">' +
+                '<i class="fa-solid fa-box-open text-3xl text-orange-400"></i>' +
+              '</span>' +
+              '<h3 class="text-xl font-bold text-gray-900">New stock arriving soon!</h3>' +
+              '<p class="mt-2 text-sm text-gray-500 max-w-sm">We are restocking our shelves. Check back shortly for fresh deals and new arrivals.</p>' +
+            '</div>';
+          return;
+        }
+
+        // One card per product. The data-* attributes on the button are
+        // read by the existing cart logic, so dynamic products work
+        // with the cart exactly like the old hardcoded cards did.
+        // Cards carry .product-card so the Motion script can attach
+        // staggered reveals + hover/tap micro-interactions.
+        grid.innerHTML = products.map(function (product) {
+          return (
+            '<article class="product-card group flex flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm shadow-pink-900/5 transition-[border-color,box-shadow] duration-300 hover:border-pink-200 hover:shadow-xl hover:shadow-pink-900/10">' +
+              '<div class="relative aspect-square overflow-hidden bg-gray-100">' +
+                '<img src="' + product.image + '" alt="' + escapeHtml(product.name) + '" loading="lazy" class="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" />' +
+                '<div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-pink-900/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>' +
+              '</div>' +
+              '<div class="flex flex-1 flex-col p-4 sm:p-5">' +
+                '<h3 class="text-sm font-semibold text-gray-900 leading-snug line-clamp-2">' + escapeHtml(product.name) + '</h3>' +
+                '<div class="mt-auto pt-3">' +
+                  '<p class="text-lg font-extrabold text-gray-900">' + formatNaira(product.price) + '</p>' +
+                  '<button type="button" data-id="' + product.id + '" data-name="' + escapeHtml(product.name) + '" data-price="' + product.price + '" data-image="' + product.image + '"' +
+                  ' class="add-to-cart mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-4 text-sm font-bold text-white shadow-md shadow-orange-500/20 transition-colors hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/25">' +
+                    '<i class="fa-solid fa-cart-plus"></i> Add to Cart' +
+                  '</button>' +
+                '</div>' +
+              '</div>' +
+            '</article>'
+          );
+        }).join('');
+
+        // Hand freshly rendered cards to the Motion script so their
+        // staggered reveal + hover/tap animations stay in sync after
+        // the admin panel adds or removes products.
+        if (window.EssyAnimations) window.EssyAnimations.initProductCards(grid);
+      }
+
+      /* ------------------------------------------------------------
+         4. RENDER ADMIN INVENTORY
+         Fills the dashboard table with every uploaded product, plus a
+         red Delete button on each row. Also updates the stat cards.
+         ------------------------------------------------------------ */
+      function renderAdminInventory() {
+        const tbody = document.getElementById('admin-inventory');
+        const countEl = document.getElementById('admin-count');
+        const valueEl = document.getElementById('admin-total-value');
+
+        // --- Store overview stats ---
+        countEl.textContent = products.length + ' product' + (products.length === 1 ? '' : 's');
+        const totalValue = products.reduce(function (sum, p) { return sum + Number(p.price); }, 0);
+        valueEl.textContent = formatNaira(totalValue);
+
+        // --- Empty inventory state ---
+        if (products.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="3" class="px-6 py-14 text-center">' +
+              '<span class="mx-auto w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">' +
+                '<i class="fa-solid fa-boxes-stacked text-xl text-gray-400"></i>' +
+              '</span>' +
+              '<p class="text-sm font-semibold text-gray-900">No products yet</p>' +
+              '<p class="text-xs text-gray-500 mt-1">Use the form to add your first product.</p>' +
+            '</td></tr>';
+          return;
+        }
+
+        // --- One table row per product ---
+        tbody.innerHTML = products.map(function (product) {
+          return (
+            '<tr class="border-t border-gray-100 hover:bg-gray-50 transition-colors">' +
+              '<td class="px-6 py-3.5">' +
+                '<div class="flex items-center gap-3">' +
+                  '<img src="' + product.image + '" alt="' + escapeHtml(product.name) + '" class="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0" />' +
+                  '<div class="min-w-0">' +
+                    '<p class="text-sm font-semibold text-gray-900 truncate max-w-[180px]">' + escapeHtml(product.name) + '</p>' +
+                    '<p class="text-xs text-gray-400">ID: ' + product.id + '</p>' +
+                  '</div>' +
+                '</div>' +
+              '</td>' +
+              '<td class="px-6 py-3.5 text-sm font-bold text-gray-900 whitespace-nowrap">' + formatNaira(product.price) + '</td>' +
+              '<td class="px-6 py-3.5 text-right">' +
+                '<button type="button" data-delete-id="' + product.id + '" aria-label="Delete ' + escapeHtml(product.name) + '"' +
+                ' class="inline-flex items-center gap-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-600 hover:text-white px-3 py-2 text-xs font-bold transition-colors">' +
+                  '<i class="fa-solid fa-trash-can"></i> Delete' +
+                '</button>' +
+              '</td>' +
+            '</tr>'
+          );
+        }).join('');
+      }
+
+      /* ------------------------------------------------------------
+         5. IMAGE HANDLING (FileReader -> base64 Data URL)
+         Reads the selected file with the FileReader API, then draws it
+         onto a hidden <canvas> and downscales it to max 800px before
+         converting to a base64 JPEG. A raw phone photo (~5MB) would
+         blow the localStorage quota; a compressed 800px JPEG (~80KB)
+         stays well within it.
+         ------------------------------------------------------------ */
+      function readImageAsDataURL(file, callback) {
+        const reader = new FileReader();
+
+        // Fires once the file has been read into a Data URL
+        reader.onload = function (event) {
+          const img = new Image();
+
+          // Fires once the Data URL decodes into a real image
+          img.onload = function () {
+            const MAX_SIZE = 800;                       // longest edge in px
+            let width = img.width;
+            let height = img.height;
+
+            // Shrink only if the image is larger than MAX_SIZE
+            if (width > MAX_SIZE || height > MAX_SIZE) {
+              const scale = MAX_SIZE / Math.max(width, height);
+              width = Math.round(width * scale);
+              height = Math.round(height * scale);
+            }
+
+            // Draw the image onto a canvas at the new size
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+            // Export as a compressed base64 JPEG and hand it back
+            callback(canvas.toDataURL('image/jpeg', 0.8));
+          };
+
+          img.onerror = function () {
+            showAdminToast('Could not read that image file');
+          };
+
+          img.src = event.target.result;                // base64 Data URL
+        };
+
+        reader.onerror = function () {
+          showAdminToast('Could not read that file');
+        };
+
+        reader.readAsDataURL(file);                     // start reading
+      }
+
+      /* ------------------------------------------------------------
+         6. ADD PRODUCT
+         Converts the image to base64, pushes a new product object
+         { id: Date.now(), name, price, image } into the array, saves
+         to localStorage, then re-renders both views.
+         ------------------------------------------------------------ */
+      function addProduct(name, price, file) {
+        readImageAsDataURL(file, function (dataUrl) {
+          // Unique id: Date.now() as specified, bumped until it is truly
+          // unique so a rapid double-submit can never create duplicates.
+          let id = Date.now();
+          while (products.some(function (p) { return p.id === id; })) {
+            id += 1;
+          }
+
+          products.push({
+            id: id,
+            name: name,
+            price: Math.round(Number(price) * 100) / 100,   // normalize decimals
+            image: dataUrl                      // base64 string
+          });
+
+          saveProducts();                       // persist to localStorage
+          renderStorefront();                   // update the public shop
+          renderAdminInventory();               // update the admin table
+
+          document.getElementById('admin-form').reset();
+          resetImagePreview();
+          showAdminToast(name + ' added to the store');
+        });
+      }
+
+      // --- Upload form wiring ---
+      const adminForm = document.getElementById('admin-form');
+      const nameInput = document.getElementById('product-name');
+      const priceInput = document.getElementById('product-price');
+      const fileInput = document.getElementById('product-image');
+
+      adminForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const name = nameInput.value.trim();
+        const price = Number(priceInput.value);
+        const file = fileInput.files[0];
+
+        // Light validation with helpful messages
+        if (!name) {
+          showAdminToast('Please enter a product name');
+          nameInput.focus();
+          return;
+        }
+        if (!priceInput.value || isNaN(price) || price < 0) {
+          showAdminToast('Please enter a valid price (numbers only)');
+          priceInput.focus();
+          return;
+        }
+        if (!file) {
+          showAdminToast('Please choose a product image');
+          return;
+        }
+
+        addProduct(name, price, file);
+      });
+
+      // Keep the price field to digits and a single decimal point only
+      priceInput.addEventListener('input', function () {
+        let value = priceInput.value.replace(/[^0-9.]/g, '');
+        const firstDot = value.indexOf('.');
+        if (firstDot !== -1) {
+          value = value.slice(0, firstDot + 1) + value.slice(firstDot + 1).replace(/\./g, '');
+        }
+        priceInput.value = value;
+      });
+
+      // Live thumbnail preview of the chosen image
+      let previewUrl = null;                    // current object URL (revoked on cleanup)
+
+      function resetImagePreview() {
+        const preview = document.getElementById('image-preview');
+        preview.classList.add('hidden');
+        preview.removeAttribute('src');
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);      // free the temporary URL
+          previewUrl = null;
+        }
+      }
+
+      fileInput.addEventListener('change', function () {
+        const preview = document.getElementById('image-preview');
+        const file = fileInput.files[0];
+
+        if (!file) {
+          resetImagePreview();
+          return;
+        }
+
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(file); // instant local preview
+        preview.src = previewUrl;
+        preview.classList.remove('hidden');
+      });
+
+      /* ------------------------------------------------------------
+         7. DELETE PRODUCT
+         Event delegation: any button carrying data-delete-id removes
+         that product (matched by id) from the array, saves, and
+         re-renders both views. A confirm() prevents accidental taps.
+         ------------------------------------------------------------ */
+      document.getElementById('admin-inventory').addEventListener('click', function (event) {
+        const btn = event.target.closest('[data-delete-id]');
+        if (!btn) return;
+
+        const id = Number(btn.dataset.deleteId);
+        const product = products.find(function (p) { return p.id === id; });
+        if (!product) return;
+
+        if (!confirm('Delete "' + product.name + '" from the store?')) return;
+
+        products = products.filter(function (p) { return p.id !== id; });
+        saveProducts();                           // persist the change
+        renderStorefront();                       // update the public shop
+        renderAdminInventory();                   // update the admin table
+        showAdminToast('Product deleted');
+      });
+
+      /* ------------------------------------------------------------
+         8. ADMIN ACCESS (hidden login)
+         The subtle "Admin" link in the footer opens a passcode modal.
+         A correct passcode adds .admin-mode to <body>; the CSS then
+         hides the public storefront and reveals #admin-dashboard.
+         ------------------------------------------------------------ */
+      const adminModal = document.getElementById('admin-modal');
+      const passcodeInput = document.getElementById('admin-passcode');
+      const passcodeError = document.getElementById('admin-passcode-error');
+
+      // Footer "Admin" link → open the modal
+      document.getElementById('admin-link').addEventListener('click', function (event) {
+        event.preventDefault();
+        openAdminModal();
+      });
+
+      function openAdminModal() {
+        passcodeInput.value = '';
+        passcodeError.classList.add('hidden');
+        adminModal.classList.remove('hidden');
+        adminModal.classList.add('flex');
+        setTimeout(function () { passcodeInput.focus(); }, 50);
+      }
+
+      function closeAdminModal() {
+        adminModal.classList.add('hidden');
+        adminModal.classList.remove('flex');
+      }
+
+      // Overlay click and Cancel button close the modal
+      document.getElementById('admin-modal-overlay').addEventListener('click', closeAdminModal);
+      document.getElementById('admin-modal-cancel').addEventListener('click', closeAdminModal);
+
+      // Passcode form submit
+      document.getElementById('admin-login-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        if (passcodeInput.value === PASSCODE) {
+          enterAdminMode();
+        } else {
+          // Wrong passcode → show error + a quick shake
+          const card = adminModal.querySelector('.admin-modal-card');
+          passcodeError.classList.remove('hidden');
+          card.classList.remove('shake');
+          void card.offsetWidth;                 // restart the animation
+          card.classList.add('shake');
+          passcodeInput.select();
+        }
+      });
+
+      // Hide the storefront and show the dashboard
+      function enterAdminMode() {
+        closeAdminModal();
+        document.body.classList.add('admin-mode');
+        renderAdminInventory();                  // fresh inventory list
+        window.scrollTo(0, 0);
+        showAdminToast('Welcome back, boss');
+      }
+
+      // Back to the public storefront
+      function exitAdminMode() {
+        document.body.classList.remove('admin-mode');
+        renderStorefront();                      // re-render just in case
+        showAdminToast('Back to the store');
+      }
+
+      document.getElementById('admin-logout').addEventListener('click', exitAdminMode);
+
+      // Escape also closes the passcode modal
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !adminModal.classList.contains('hidden')) {
+          closeAdminModal();
+        }
+      });
+
+      /* ------------------------------------------------------------
+         9. ADMIN TOAST
+         The dashboard has its own toast element because the storefront
+         toast is hidden while admin mode is active.
+         ------------------------------------------------------------ */
+      let adminToastTimer = null;
+      function showAdminToast(message) {
+        const toast = document.getElementById('admin-toast');
+        document.getElementById('admin-toast-message').textContent = message;
+        toast.classList.add('show');
+        clearTimeout(adminToastTimer);
+        adminToastTimer = setTimeout(function () {
+          toast.classList.remove('show');
+        }, 2200);
+      }
+
+      /* ------------------------------------------------------------
+         10. INIT
+         Render the storefront immediately — the "New stock arriving
+         soon!" placeholder shows until the owner uploads products.
+         ------------------------------------------------------------ */
+      renderStorefront();
+    })();
+  </script>
+
+  <!-- ============================================================ -->
+  <!-- ============ UI ANIMATIONS (Motion — vanilla Framer) ======== -->
+  <!-- motion.dev is the Framer Motion team's library for plain      -->
+  <!-- HTML pages. It drives the scroll reveals, staggered          -->
+  <!-- entrances, and hover/tap micro-interactions below using ONLY -->
+  <!-- opacity + translate/scale (compositor-friendly). The cart,   -->
+  <!-- WhatsApp checkout, and admin logic above is untouched.       -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      var M = window.Motion;
+      if (!M) return;      // Motion CDN blocked/unavailable → static page, nothing hidden
+
+      // Accessibility: users who prefer reduced motion get a fully
+      // static page — the .motion-ready class is never added, so no
+      // element is ever hidden or moved. (Standard media query — the
+      // library's own helper changed shape between v11 and v12.)
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      var EASE = [0.22, 1, 0.36, 1]; // easeOutExpo — premium deceleration
+
+      // Arm the CSS initial-hidden states ONLY now that Motion exists.
+      document.documentElement.classList.add('motion-ready');
+
+      var splash = document.getElementById('splash-screen');
+      var heroPlayed = false;
+
+      /* ------------------------------------------------------------
+         1. HERO + NAV ENTRANCE
+         Fires the moment the splash overlay disappears (works for both
+         the Skip button and the 2.5s auto-fade), then staggers the
+         hero copy and slides the floating nav in.
+         ------------------------------------------------------------ */
+      function playHeroEntrance() {
+        if (heroPlayed) return;
+        heroPlayed = true;
+
+        // Floating nav slides down
+        M.animate('#nav', { opacity: 1, y: 0 }, { duration: 0.6, easing: EASE });
+
+        // Staggered hero: badge → headline → paragraph → CTAs → trust
+        M.animate(
+          '#home [data-reveal-hero]',
+          { opacity: 1, y: 0 },
+          { duration: 0.7, delay: M.stagger(0.09, { startDelay: 0.05 }), easing: EASE }
+        );
+      }
+
+      // If the first-visit 3D intro is about to show, hold the hero
+      // entrance until the intro finishes (essy:intro-done) so the
+      // storefront animates in fresh instead of behind the overlay.
+      function onSplashDismissed() {
+        if (window.EssyIntro && window.EssyIntro.isShowing()) {
+          document.addEventListener('essy:intro-done', playHeroEntrance, { once: true });
+          setTimeout(playHeroEntrance, 10000);   // safety net
+        } else {
+          playHeroEntrance();
+        }
+      }
+
+      if (splash) {
+        // Watch the splash's class/style (Skip adds .hide, and the
+        // existing dismissSplash() sets display:none 700ms later).
+        var observer = new MutationObserver(onSplashDismissed);
+        observer.observe(splash, { attributes: true, attributeFilter: ['class', 'style'] });
+        // Safety net if the observer ever misses a transition.
+        setTimeout(onSplashDismissed, 5200);
+      } else {
+        onSplashDismissed();
+      }
+
+      /* ------------------------------------------------------------
+         2. SCROLL REVEALS
+         Every [data-reveal] element fades/slides in the first time it
+         enters the viewport, then stops being observed.
+         ------------------------------------------------------------ */
+      function setupScrollReveals() {
+        var targets = document.querySelectorAll('[data-reveal]');
+        Array.prototype.forEach.call(targets, function (el) {
+          var delay = parseFloat(el.getAttribute('data-reveal-delay')) || 0;
+          var stop = M.inView(el, function () {
+            M.animate(el, { opacity: 1, y: 0 }, { duration: 0.7, delay: delay, easing: EASE });
+            stop();
+          }, { amount: 0.25 });
+        });
+      }
+      setupScrollReveals();
+
+      /* ------------------------------------------------------------
+         3. PRODUCT CARDS
+         Called by renderStorefront() after every render (initial load,
+         admin add, admin delete, admin logout). Staggered reveal +
+         hover lift + tap feedback. Transform/opacity only.
+         ------------------------------------------------------------ */
+      function initProductCards(grid) {
+        if (!grid) return;
+
+        var cards = grid.querySelectorAll('.product-card');
+        Array.prototype.forEach.call(cards, function (card, i) {
+          // Staggered scroll reveal (cap the delay so a long grid does
+          // not feel sluggish)
+          var stop = M.inView(card, function () {
+            M.animate(card, { opacity: 1, y: 0 }, {
+              duration: 0.6,
+              delay: Math.min(i * 0.06, 0.3),
+              easing: EASE
+            });
+            stop();
+          }, { amount: 0.15 });
+
+          // Hover lift (desktop pointer only — ignored on touch)
+          M.hover(card, function () {
+            M.animate(card, { y: -6 }, { duration: 0.25, easing: EASE });
+            return function () {
+              M.animate(card, { y: 0 }, { duration: 0.35, easing: EASE });
+            };
+          });
+
+          // Tap feedback on the Add to Cart button
+          var btn = card.querySelector('.add-to-cart');
+          if (btn) {
+            M.press(btn, function () {
+              M.animate(btn, { scale: 0.96 }, { duration: 0.12, easing: EASE });
+              return function () {
+                M.animate(btn, { scale: 1 }, { duration: 0.18, easing: EASE });
+              };
+            });
+          }
+        });
+      }
+
+      /* ------------------------------------------------------------
+         4. HERO CTA MICRO-INTERACTIONS
+         Lift on hover, press-down feedback on tap.
+         ------------------------------------------------------------ */
+      Array.prototype.forEach.call(
+        document.querySelectorAll('.hero-cta-primary, .hero-cta-secondary'),
+        function (cta) {
+          M.hover(cta, function () {
+            M.animate(cta, { y: -3 }, { duration: 0.2, easing: EASE });
+            return function () {
+              M.animate(cta, { y: 0 }, { duration: 0.3, easing: EASE });
+            };
+          });
+          M.press(cta, function () {
+            M.animate(cta, { scale: 0.97 }, { duration: 0.1, easing: EASE });
+            return function () {
+              M.animate(cta, { scale: 1 }, { duration: 0.2, easing: EASE });
+            };
+          });
+        }
+      );
+
+      /* ------------------------------------------------------------
+         5. NAV SCROLL SHADOW (desktop)
+         Adds a deeper shadow to the floating pill once the page
+         scrolls, reinforcing the elevation.
+         ------------------------------------------------------------ */
+      var nav = document.getElementById('nav');
+      var navScrolled = false;
+      function updateNavShadow() {
+        var nowScrolled = window.scrollY > 10;
+        if (nowScrolled !== navScrolled) {
+          navScrolled = nowScrolled;
+          nav.classList.toggle('md:shadow-2xl', nowScrolled);
+          nav.classList.toggle('md:shadow-pink-900/10', nowScrolled);
+        }
+      }
+      window.addEventListener('scroll', updateNavShadow, { passive: true });
+      updateNavShadow();
+
+      // Cards rendered during the initial page load (renderStorefront
+      // runs in an earlier script) also need their animations attached.
+      initProductCards(document.getElementById('product-grid'));
+
+      // Expose for renderStorefront() so dynamically rendered cards
+      // get their animations re-attached after every re-render.
+      window.EssyAnimations = { initProductCards: initProductCards };
+    })();
+  </script>
+</body>
+</html>

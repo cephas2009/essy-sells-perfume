@@ -1,0 +1,208 @@
+Server ready - Local: [4mhttp://localhost:3000[24m, Network: [4mhttp://10.95.0.161:3000[24m
+Building...
+Built in 2407ms
+Building...
+Built in 469ms
+Building...
+Built in 545ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 915ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 397ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 460ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 315ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 616ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 287ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 517ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 315ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 582ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 389ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 236ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 262ms
+Building...
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/shared.ts[39m[22m [1m[32m2:1-84[39m[22m
+[1m  × Module [1m[31mnot found[39m[22m[1m: Can't resolve '@remotion/google-fonts/Playfair_Display' in 'C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo'
+   ╭─[2:0]
+ 1 │ import { loadFont } from "@remotion/google-fonts/Poppins";
+ 2 │ import { loadFont as loadSerifFont } from "@remotion/google-fonts/Playfair_Display";
+   · ────────────────────────────────────────────────────────────────────────────────────
+ 3 │ const { fontFamily } = loadFont("normal", {
+ 4 │     weights: [
+   ╰────
+[39m[22m
+Built in 359ms
+Building...
+Built in 281ms
+Building...
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[31mSyntaxError: Expected corresponding JSX closing tag for <div>. (320:6)[39m
+[1m[31mERROR[39m[22m in [1m./src/EssyPromo/CtaScene.tsx[39m[22m
+[1m  × Module build [1m[31mfailed[39m[22m[1m (from builtin:swc-loader):
+  ├─▶   ×   x Expected '</', got 'jsx text'
+  │     │      ,-[C:\Users\USER\OneDrive\Desktop\basic ecommerce\essy-promo\src\EssyPromo\CtaScene.tsx:320:1]
+  │     │  317 |               />
+  │     │  318 |               {whatsappNumber}
+  │     │  319 |             </Interactive.Div>
+  │     │  320 | ,->       </AbsoluteFill>
+  │     │  321 | |
+  │     │  322 | `->       {/* Footer brand */}
+  │     │  323 |           <AbsoluteFill
+  │     │  324 |             style={{
+  │     │  325 |               justifyContent: "flex-end",
+  │     │      `----
+  │     │
+  │
+  ╰─▶   × Syntax [1m[31mError[39m[22m[1m
+[39m[22m
+Built in 380ms
+Building...
+Built in 575ms
+Building...
+Built in 760ms
+Building...
+Built in 422ms
+Building...
+Built in 509ms
+Building...
+Built in 1145ms
+Building...
+Built in 528ms
+Building...
+Built in 450ms
